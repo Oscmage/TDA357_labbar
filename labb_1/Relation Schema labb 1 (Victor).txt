@@ -1,0 +1,65 @@
+
+Entities
+========================================
+Departments(_name, _abbreviations)
+
+Programs(_name, _abbreviation)
+
+Branches(_name, _programName)
+	programName -> Programs.name //"Contains" relation
+	
+Students(name, _personalNumber, _prog, _bran)
+	prog -> Program.name //"Studies" relation
+	bran -> Branches.name
+
+Courses(name, _code, credit, gives)
+	gives -> Departments.abbreviations // "GivesCourses" relation
+	
+Classification(_name)
+
+ISA
+Limited Course(_code, maxAmount)
+	code -> Courses.code
+
+
+Relations
+========================================
+
+HostPrograms(_abbreviations, _name)
+	abbreviations -> Departments.abbreviations
+	name -> Programs.name
+	
+IsRegisteredFor(_personalNo, _code)
+	personalNo -> Student.personal_number
+	code -> Courses.code
+
+IsMandatory(_name, _code)
+	name -> Programs.name
+	code -> Courses.code
+
+IsRecommended(_name, _code)
+	name -> Branches.name
+	code -> Courses.code
+
+AddMandatory(_name, _code)
+	name -> Branches.name
+	code -> Courses.code
+
+CourseCompleted(_personalNo, _code, grade)
+	personalNo -> Students.personal_number
+	code -> Courses.code
+
+IsPrerequisite(_code, _codePreq)
+	code -> Courses.code
+	codePreq -> Courses.code
+
+WaitingFor(_code, _personalNo, sinceDate)
+	maxAmount -> LimitedCourse.maximumAmount
+	personalNo -> Students.personal_number
+
+HasClassification(_courseCode, _className)
+	courseCode -> Courses.code
+	className -> Classification.name
+	
+	
+	
