@@ -1,4 +1,12 @@
-﻿
+﻿DROP TABLE IF EXISTS 
+departments,programs,branches,classification,courses,
+students,is_prerequisite,has_classification,limited_course,
+waiting_for,course_completed,is_registered_for,
+additional_mandatory,belongs_to,
+is_recommended,
+is_mandatory,
+host_programs;
+
 CREATE TABLE departments (
 	abbreviation TEXT,
 	name TEXT NOT NULL UNIQUE,
