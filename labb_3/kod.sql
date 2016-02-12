@@ -96,6 +96,7 @@ CREATE TABLE course_completed (
 CREATE TABLE is_registered_for (
 	personal_number CHAR(10),
 	course_code CHAR(6),
+	PRIMARY KEY (personal_number,course_code),
 	FOREIGN KEY (personal_number) REFERENCES students (personal_number),
 	FOREIGN KEY (course_code) REFERENCES courses (code)
 );
@@ -104,6 +105,7 @@ CREATE TABLE additional_mandatory (
 	course_code CHAR(6),
 	branch_name TEXT,
 	program_name TEXT,
+	PRIMARY KEY (course_code,branch_name,program_name),
 	FOREIGN KEY (course_code) REFERENCES courses (code),
 	FOREIGN KEY (branch_name, program_name) REFERENCES branches (name, program_name) 
 );
@@ -112,6 +114,7 @@ CREATE TABLE is_recommended (
 	course_code CHAR(6),
 	branch_name TEXT,
 	program_name TEXT,
+	PRIMARY KEY (course_code,branch_name,program_name),
 	FOREIGN KEY (course_code) REFERENCES courses (code),
 	FOREIGN KEY (branch_name, program_name) REFERENCES branches (name, program_name) 
 );
@@ -119,14 +122,16 @@ CREATE TABLE is_recommended (
 CREATE TABLE is_mandatory (
 	course_code CHAR(6),
 	program TEXT,
+	PRIMARY KEY (course_code,program),
 	FOREIGN KEY (course_code) REFERENCES courses (code),
 	FOREIGN KEY (program) REFERENCES programs (name)
 );
 
 CREATE TABLE belongs_to ( 
 	personal_number CHAR(10),
-	branch_name TEXT,
-	program_name TEXT,
+	branch_name TEXT NOT NULL,
+	program_name TEXT NOT NULL,
+	PRIMARY KEY (personal_number),
 	FOREIGN KEY (personal_number) REFERENCES students (personal_number),
 	FOREIGN KEY (branch_name, program_name) REFERENCES branches (program_name, name)
 );
@@ -134,6 +139,7 @@ CREATE TABLE belongs_to (
 CREATE TABLE host_programs (
 	abbreviations TEXT,
 	program_name TEXT,
+	PRIMARY KEY (abbreviations,program_name),
 	FOREIGN KEY (abbreviations) REFERENCES departments (name),
 	FOREIGN KEY (program_name) REFERENCES programs (name)
 );
