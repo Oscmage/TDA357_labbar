@@ -62,29 +62,33 @@ CREATE TABLE is_prerequisite (
 CREATE TABLE has_classification (
 	name TEXT,
 	code TEXT,
+	PRIMARY KEY (name,code),
 	FOREIGN KEY (name) REFERENCES classification (name),
 	FOREIGN KEY (code) REFERENCES courses (code)
 );
 
 CREATE TABLE limited_course (
 	code TEXT,
-	max_amount INT CHECK (max_amount > 0),
+	max_amount INT CHECK (max_amount > 0) NOT NULL,
+	PRIMARY KEY (code),
 	FOREIGN KEY (code) REFERENCES courses (code)
 );
 
 CREATE TABLE waiting_for (
 	code TEXT,
 	personal_number CHAR(10),
-	since_date DATE,
+	since_date DATE NOT NULL,
+	PRIMARY KEY (code,personal_number),
 	FOREIGN KEY (code) REFERENCES courses (code),
 	FOREIGN KEY (personal_number) REFERENCES students (personal_number)
 );
 
 
 CREATE TABLE course_completed (
-	personal_number CHAR(10), /*CHECK (LIKE '%[0-9]%'),*/
+	personal_number CHAR(10),
 	course_code CHAR(6),
-	grade CHAR(1) /*CHECK ((grade >= 3 AND grade <=5) OR grade = ‘U’)*/,
+	grade CHAR(1) CHECK (grade IN ('3','4','5','U')) NOT NULL,
+	PRIMARY KEY (personal_number,course_code),
 	FOREIGN KEY (personal_number) REFERENCES students (personal_number),
 	FOREIGN KEY (course_code) REFERENCES courses (code)
 );
