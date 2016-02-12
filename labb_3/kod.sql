@@ -16,7 +16,7 @@ CREATE TABLE departments (
 
 CREATE TABLE programs (
 	name TEXT,
-	abbreviation TEXT,
+	abbreviation TEXT NOT NULL,
 	PRIMARY KEY (name)
 );
 
@@ -24,7 +24,7 @@ CREATE TABLE programs (
 CREATE TABLE branches (
 	name TEXT,
 	program_name TEXT,
-	PRIMARY KEY (name),
+	PRIMARY KEY (name,program_name),
 	FOREIGN KEY (program_name) REFERENCES programs (name)
 );
 
@@ -35,17 +35,17 @@ CREATE TABLE classification (
 
 CREATE TABLE courses (
 	code TEXT ,
-	name TEXT,
-	credit FLOAT,
-	department TEXT,
+	name TEXT NOT NULL,
+	credit FLOAT NOT NULL,
+	department TEXT NOT NULL,
 	PRIMARY KEY (code),
 	FOREIGN KEY (department) REFERENCES departments (abbreviation)
 );
 
 CREATE TABLE students (
-	personal_number CHAR(10),
-	name TEXT,
-	student_id TEXT,
+	personal_number CHAR(10) CHECK (personal_number LIKE '%[0-9]%'), /* Personal number in format '94 11 13 1340' NOT '1994 11 13 1340' */
+	name TEXT NOT NULL,
+	student_id TEXT NOT NULL,
 	program_name TEXT NOT NULL,
 	PRIMARY KEY (personal_number),
 	FOREIGN KEY (program_name) REFERENCES programs (name)
@@ -54,6 +54,7 @@ CREATE TABLE students (
 CREATE TABLE is_prerequisite (
 	code TEXT,
 	prerequisite TEXT,
+	PRIMARY KEY (code,prerequisite),
 	FOREIGN KEY (code) REFERENCES courses (code),
 	FOREIGN KEY (prerequisite)  REFERENCES courses (code)
 );
