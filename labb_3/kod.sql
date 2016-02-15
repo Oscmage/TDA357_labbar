@@ -135,16 +135,22 @@ CREATE TABLE belongs_to (
 	program_name TEXT NOT NULL,
 	PRIMARY KEY (personal_number),
 	FOREIGN KEY (personal_number,program_name) REFERENCES students (personal_number,program_name),
-	FOREIGN KEY (branch_name, program_name) REFERENCES branches (program_name, name)
+	FOREIGN KEY (branch_name, program_name) REFERENCES branches (name,program_name)
 );
 
 CREATE TABLE host_programs (
 	abbreviations TEXT,
 	program_name TEXT,
 	PRIMARY KEY (abbreviations,program_name),
-	FOREIGN KEY (abbreviations) REFERENCES departments (name),
+	FOREIGN KEY (abbreviations) REFERENCES departments (abbreviation),
 	FOREIGN KEY (program_name) REFERENCES programs (name)
 );
+
+
+
+/*<------------------------------------INSERTION START--------------------------------->*/
+
+
 
 	/*DEPTS*/
 	INSERT INTO departments VALUES ('CS', 'Computer Science');
@@ -164,10 +170,19 @@ CREATE TABLE host_programs (
 	INSERT INTO programs VALUES ('Maskinteknik', 'M');
 	INSERT INTO programs VALUES ('Flipperteknik', 'F');
 
+<<<<<<< HEAD
+	/*Host Program*/
+	INSERT INTO host_programs VALUES ('CS','Informationsteknik');
+=======
 	/*Branches*/
 	INSERT INTO branches VALUES ('Algorithms', 'Datateknik');
 	INSERT INTO branches VALUES ('Awesomeness', 'Flipperteknik');
+>>>>>>> 5ab4b7dda36f5646e52e8cdaebc5e2a7879c100c
 
+	/*Branches*/
+	INSERT INTO branches VALUES ('Software Engineering','Informationsteknik');
+	INSERT INTO branches VALUES ('Computer Science & Algorithms','Datateknik');
+	
 	/*Courses*/
 	INSERT INTO courses VALUES ('TDA357', 'Databaser', '7.5', 'CS');
 	INSERT INTO courses VALUES ('DAT205', 'Advanced Computer Graphics', '15.0', 'CE');
@@ -185,6 +200,7 @@ CREATE TABLE host_programs (
 
 	/*Limited course*/
 	INSERT INTO limited_course VALUES ('TDA357','1');
+	INSERT INTO limited_course VALUES ('DAT205','1');
 
 	/*Students*/
 	INSERT INTO students VALUES ('9411131230','Oscar Evertsson', 'oscarev', 'Informationsteknik');
@@ -206,10 +222,36 @@ CREATE TABLE host_programs (
 	INSERT INTO is_mandatory VALUES ('DRU103','Flipperteknik');
 
 	/*Student is waiting to get into course*/
+	/* Three waiting students for two different limited courses.*/
 	INSERT INTO waiting_for VALUES ('TDA357','9206031111', '1992-06-03');
+	INSERT INTO waiting_for VALUES ('TDA357','9311131230', '1992-06-04');
+	INSERT INTO waiting_for VALUES ('TDA357','9211131230', '1992-06-05');
+	
+	INSERT INTO waiting_for VALUES ('DAT205','9206031111', '1992-06-03');
+	INSERT INTO waiting_for VALUES ('DAT205','9311131230', '1992-06-04');
+	INSERT INTO waiting_for VALUES ('DAT205','9211131230', '1992-06-05');
+
+
 
 	/*Course completed*/
-	INSERT INTO course_completed VALUES ('9206031111','DRU101', '5');
+	INSERT INTO course_completed VALUES ('9206031111','DRU101','5');
+	/* This student have completed the req for mandatory and additional mandatory */
+	INSERT INTO course_completed VALUES ('9411131230','TDA357','5');
+	INSERT INTO course_completed VALUES ('9411131230','DAT205','5');
+	INSERT INTO course_completed VALUES ('9411131230','DRU101','5');
+	INSERT INTO course_completed VALUES ('9411131230','DRU102','5');
+	INSERT INTO course_completed VALUES ('9411131230','DRU103','5');
 
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
+
+	/*Additional Mandatory*/
+	INSERT INTO additional_mandatory VALUES ('DRU101','Software Engineering','Informationsteknik');
+	INSERT INTO additional_mandatory VALUES ('DRU102','Software Engineering','Informationsteknik');
+
+	/*Recommended*/
+	INSERT INTO is_recommended VALUES ('DAT205','Software Engineering','Informationsteknik');
+	
+	/*BelongsTo*/
+	INSERT INTO belongs_to VALUES ('9411131230','Software Engineering','Informationsteknik');
+	
