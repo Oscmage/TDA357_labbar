@@ -43,7 +43,7 @@ CREATE TABLE courses (
 );
 
 CREATE TABLE students (
-	personal_number CHAR(10) CHECK (personal_number LIKE '%[0-9]%'), /* Personal number in format '94 11 13 1340' NOT '1994 11 13 1340' */
+	personal_number CHAR(10), /*CHECK (personal_number LIKE '%[0-9]%'), Personal number in format '94 11 13 1340' NOT '1994 11 13 1340' */
 	name TEXT NOT NULL,
 	student_id TEXT NOT NULL,
 	program_name TEXT UNIQUE,
@@ -145,6 +145,31 @@ CREATE TABLE host_programs (
 	FOREIGN KEY (abbreviations) REFERENCES departments (name),
 	FOREIGN KEY (program_name) REFERENCES programs (name)
 );
+	INSERT INTO departments VALUES ('');
 
+	INSERT INTO classification VALUES ('Math');
+	INSERT INTO classification VALUES ('Language');
+	INSERT INTO classification VALUES ('Seminar');
+	INSERT INTO classification VALUES ('Physics');
 
+	INSERT INTO programs VALUES ('Informationsteknik','IT');
+	INSERT INTO programs VALUES ('Datateknik', 'Data');
+	
+	INSERT INTO students VALUES ('9411131230','Oscar Evertsson', 'oscarev', 'Informationsteknik');
+	INSERT INTO students VALUES ('9311131230','Lars Larssson', 'larsla', 'Informationsteknik');
+	INSERT INTO students VALUES ('9211131230','Bruce Springsteen', 'bruces', 'Informationsteknik');
+	INSERT INTO students VALUES ('9111131230','Sven Svensson', 'svensv', 'Industriell ekonomi');
+	INSERT INTO students VALUES ('9011131230','Bertil Åkesson', 'bertåk', 'Maskinteknik');
+	INSERT INTO students VALUES ('8911131230','Johan Eklund', 'johanek', 'Datateknik');
+	INSERT INTO students VALUES ('8811131230','Bon jovi', 'bonj', 'Datateknik');
+	/*
+	INSERT INTO is_mandatory VALUES ('TDA357','Informationsteknik');
+	INSERT INTO is_mandatory VALUES ('TDA457','Informationsteknik');
+	INSERT INTO is_mandatory VALUES ('TDA557','Informationsteknik');
+	INSERT INTO is_mandatory VALUES ('TDA657','Informationsteknik');
 
+	INSERT INTO is_mandatory VALUES ('TDA357','Datateknik');
+	INSERT INTO is_mandatory VALUES ('TDA457','Datateknik');
+	INSERT INTO is_mandatory VALUES ('TDA557','Datateknik');
+	INSERT INTO is_mandatory VALUES ('TDA657','Datateknik');
+*/
