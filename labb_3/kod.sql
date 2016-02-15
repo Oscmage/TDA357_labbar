@@ -170,14 +170,13 @@ CREATE TABLE host_programs (
 	INSERT INTO programs VALUES ('Maskinteknik', 'M');
 	INSERT INTO programs VALUES ('Flipperteknik', 'F');
 
-<<<<<<< HEAD
+
 	/*Host Program*/
 	INSERT INTO host_programs VALUES ('CS','Informationsteknik');
-=======
+
 	/*Branches*/
 	INSERT INTO branches VALUES ('Algorithms', 'Datateknik');
 	INSERT INTO branches VALUES ('Awesomeness', 'Flipperteknik');
->>>>>>> 5ab4b7dda36f5646e52e8cdaebc5e2a7879c100c
 
 	/*Branches*/
 	INSERT INTO branches VALUES ('Software Engineering','Informationsteknik');
@@ -230,8 +229,6 @@ CREATE TABLE host_programs (
 	INSERT INTO waiting_for VALUES ('DAT205','9206031111', '1992-06-03');
 	INSERT INTO waiting_for VALUES ('DAT205','9311131230', '1992-06-04');
 	INSERT INTO waiting_for VALUES ('DAT205','9211131230', '1992-06-05');
-
-
 
 	/*Course completed*/
 	INSERT INTO course_completed VALUES ('9206031111','DRU101','5');
