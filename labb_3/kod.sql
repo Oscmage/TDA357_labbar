@@ -1,4 +1,8 @@
-﻿DROP TABLE IF EXISTS 
+﻿
+DROP VIEW IF EXISTS
+StudentsFollowing;
+
+DROP TABLE IF EXISTS 
 departments,programs,branches,classification,courses,
 students,is_prerequisite,has_classification,limited_course,
 waiting_for,course_completed,is_registered_for,
@@ -7,6 +11,7 @@ is_recommended,
 is_mandatory,
 host_programs;
 
+/*<----------------------------TABLE START--------------------------->*/
 CREATE TABLE departments (
 	abbreviation TEXT,
 	name TEXT NOT NULL UNIQUE,
@@ -146,7 +151,7 @@ CREATE TABLE host_programs (
 	FOREIGN KEY (program_name) REFERENCES programs (name)
 );
 
-
+/*<----------------------------TABLE END--------------------------->*/
 
 /*<------------------------------------INSERTION START--------------------------------->*/
 
@@ -251,4 +256,18 @@ CREATE TABLE host_programs (
 	
 	/*BelongsTo*/
 	INSERT INTO belongs_to VALUES ('9411131230','Software Engineering','Informationsteknik');
+/*<------------------------------------INSERTION END--------------------------------->*/
+
+/*<------------------------------------VIEW START--------------------------------->*/
+
+	CREATE VIEW StudentsFollowing AS
+		SELECT  students.personal_number,name,student_id,students.program_name,branch_name
+		FROM students
+		LEFT JOIN belongs_to
+		ON students.personal_number=belongs_to.personal_number;
+
+	SELECT * FROM StudentsFollowing;
+		
 	
+
+/*<------------------------------------VIEW END--------------------------------->*/
