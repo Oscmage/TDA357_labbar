@@ -162,10 +162,11 @@ CREATE TABLE host_programs (
 	INSERT INTO programs VALUES ('Datateknik', 'D');
 	INSERT INTO programs VALUES ('Industriell Ekonomi', 'I');
 	INSERT INTO programs VALUES ('Maskinteknik', 'M');
-	INSERT INTO programs VALUES ('Teknisk Fysik', 'F');
+	INSERT INTO programs VALUES ('Flipperteknik', 'F');
 
 	/*Branches*/
-	INSERT INTO branches VALUES (''
+	INSERT INTO branches VALUES ('Algorithms', 'Datateknik');
+	INSERT INTO branches VALUES ('Awesomeness', 'Flipperteknik');
 
 	/*Courses*/
 	INSERT INTO courses VALUES ('TDA357', 'Databaser', '7.5', 'CS');
@@ -193,7 +194,7 @@ CREATE TABLE host_programs (
 	INSERT INTO students VALUES ('9111131230','Sven Svensson', 'svensv', 'Industriell Ekonomi');
 	INSERT INTO students VALUES ('9011131230','Bertil Åkesson', 'bertåk', 'Maskinteknik');
 	INSERT INTO students VALUES ('8911131230','Johan Eklund', 'johanek', 'Datateknik');
-	INSERT INTO students VALUES ('8811131230','Bon jovi', 'bonj', 'Datateknik');
+	INSERT INTO students VALUES ('8811131230','Bon jovi', 'bonj', 'Flipperteknik');
 
 	/*Mandatory for program*/
 	INSERT INTO is_mandatory VALUES ('TDA357','Informationsteknik');
@@ -202,7 +203,7 @@ CREATE TABLE host_programs (
 	INSERT INTO is_mandatory VALUES ('DAT205','Datateknik');
 	INSERT INTO is_mandatory VALUES ('DRU101','Datateknik');
 	INSERT INTO is_mandatory VALUES ('DRU102','Datateknik');
-	INSERT INTO is_mandatory VALUES ('DRU103','Teknisk Fysik');
+	INSERT INTO is_mandatory VALUES ('DRU103','Flipperteknik');
 
 	/*Student is waiting to get into course*/
 	INSERT INTO waiting_for VALUES ('TDA357','9206031111', '1992-06-03');
