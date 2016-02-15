@@ -46,7 +46,7 @@ CREATE TABLE students (
 	personal_number CHAR(10) CHECK (personal_number LIKE '%[0-9]%'), /* Personal number in format '94 11 13 1340' NOT '1994 11 13 1340' */
 	name TEXT NOT NULL,
 	student_id TEXT NOT NULL,
-	program_name TEXT NOT NULL,
+	program_name TEXT UNIQUE,
 	PRIMARY KEY (personal_number),
 	FOREIGN KEY (program_name) REFERENCES programs (name)
 );
@@ -78,6 +78,7 @@ CREATE TABLE waiting_for (
 	code TEXT,
 	personal_number CHAR(10),
 	since_date DATE NOT NULL,
+	unique (code, since_date),
 	PRIMARY KEY (code,personal_number),
 	FOREIGN KEY (code) REFERENCES courses (code),
 	FOREIGN KEY (personal_number) REFERENCES students (personal_number)
@@ -133,6 +134,7 @@ CREATE TABLE belongs_to (
 	program_name TEXT NOT NULL,
 	PRIMARY KEY (personal_number),
 	FOREIGN KEY (personal_number) REFERENCES students (personal_number),
+	FOREIGN KEY (program_name) REFERENCES students (program_name),
 	FOREIGN KEY (branch_name, program_name) REFERENCES branches (program_name, name)
 );
 
