@@ -46,7 +46,8 @@ CREATE TABLE students (
 	personal_number CHAR(10), /*CHECK (personal_number LIKE '%[0-9]%'), Personal number in format '94 11 13 1340' NOT '1994 11 13 1340' */
 	name TEXT NOT NULL,
 	student_id TEXT NOT NULL,
-	program_name TEXT UNIQUE,
+	program_name TEXT,
+	unique (personal_number, program_name),
 	PRIMARY KEY (personal_number),
 	FOREIGN KEY (program_name) REFERENCES programs (name)
 );
@@ -133,8 +134,7 @@ CREATE TABLE belongs_to (
 	branch_name TEXT NOT NULL,
 	program_name TEXT NOT NULL,
 	PRIMARY KEY (personal_number),
-	FOREIGN KEY (personal_number) REFERENCES students (personal_number),
-	FOREIGN KEY (program_name) REFERENCES students (program_name),
+	FOREIGN KEY (personal_number,program_name) REFERENCES students (personal_number,program_name),
 	FOREIGN KEY (branch_name, program_name) REFERENCES branches (program_name, name)
 );
 
@@ -145,31 +145,70 @@ CREATE TABLE host_programs (
 	FOREIGN KEY (abbreviations) REFERENCES departments (name),
 	FOREIGN KEY (program_name) REFERENCES programs (name)
 );
-	INSERT INTO departments VALUES ('');
 
+	/*DEPTS*/
+	INSERT INTO departments VALUES ('CS', 'Computer Science');
+	INSERT INTO departments VALUES ('CE', 'Computer Engineering');
+	INSERT INTO departments VALUES ('KAPPA', 'Serious Society');
+
+	/*Classifications*/	
 	INSERT INTO classification VALUES ('Math');
 	INSERT INTO classification VALUES ('Language');
 	INSERT INTO classification VALUES ('Seminar');
 	INSERT INTO classification VALUES ('Physics');
 
+	/*Programs*/
 	INSERT INTO programs VALUES ('Informationsteknik','IT');
-	INSERT INTO programs VALUES ('Datateknik', 'Data');
-	
+	INSERT INTO programs VALUES ('Datateknik', 'D');
+	INSERT INTO programs VALUES ('Industriell Ekonomi', 'I');
+	INSERT INTO programs VALUES ('Maskinteknik', 'M');
+	INSERT INTO programs VALUES ('Teknisk Fysik', 'F');
+
+	/*Branches*/
+	INSERT INTO branches VALUES (''
+
+	/*Courses*/
+	INSERT INTO courses VALUES ('TDA357', 'Databaser', '7.5', 'CS');
+	INSERT INTO courses VALUES ('DAT205', 'Advanced Computer Graphics', '15.0', 'CE');
+	INSERT INTO courses VALUES ('DRU101', 'Pinball Theory', '7.5', 'CS');
+	INSERT INTO courses VALUES ('DRU102', 'Advanced Pinball Physics', '7.5', 'CS');
+	INSERT INTO courses VALUES ('DRU103', 'Quantum Pinball Theory', '15.0', 'KAPPA');
+
+	/*Prereqs*/
+	INSERT INTO is_prerequisite VALUES ('DRU102','DRU101');
+	INSERT INTO is_prerequisite VALUES ('DRU103','DRU102');
+
+	/*Course classification*/
+	INSERT INTO has_classification VALUES ('Physics','DRU101');
+	INSERT INTO has_classification VALUES ('Seminar','DAT205');
+
+	/*Limited course*/
+	INSERT INTO limited_course VALUES ('TDA357','1');
+
+	/*Students*/
 	INSERT INTO students VALUES ('9411131230','Oscar Evertsson', 'oscarev', 'Informationsteknik');
+	INSERT INTO students VALUES ('9206031111','Victor Olausson', 'vicola', 'Datateknik');
 	INSERT INTO students VALUES ('9311131230','Lars Larssson', 'larsla', 'Informationsteknik');
 	INSERT INTO students VALUES ('9211131230','Bruce Springsteen', 'bruces', 'Informationsteknik');
-	INSERT INTO students VALUES ('9111131230','Sven Svensson', 'svensv', 'Industriell ekonomi');
+	INSERT INTO students VALUES ('9111131230','Sven Svensson', 'svensv', 'Industriell Ekonomi');
 	INSERT INTO students VALUES ('9011131230','Bertil Åkesson', 'bertåk', 'Maskinteknik');
 	INSERT INTO students VALUES ('8911131230','Johan Eklund', 'johanek', 'Datateknik');
 	INSERT INTO students VALUES ('8811131230','Bon jovi', 'bonj', 'Datateknik');
-	/*
-	INSERT INTO is_mandatory VALUES ('TDA357','Informationsteknik');
-	INSERT INTO is_mandatory VALUES ('TDA457','Informationsteknik');
-	INSERT INTO is_mandatory VALUES ('TDA557','Informationsteknik');
-	INSERT INTO is_mandatory VALUES ('TDA657','Informationsteknik');
 
+	/*Mandatory for program*/
+	INSERT INTO is_mandatory VALUES ('TDA357','Informationsteknik');
+	INSERT INTO is_mandatory VALUES ('DAT205','Informationsteknik');
 	INSERT INTO is_mandatory VALUES ('TDA357','Datateknik');
-	INSERT INTO is_mandatory VALUES ('TDA457','Datateknik');
-	INSERT INTO is_mandatory VALUES ('TDA557','Datateknik');
-	INSERT INTO is_mandatory VALUES ('TDA657','Datateknik');
-*/
+	INSERT INTO is_mandatory VALUES ('DAT205','Datateknik');
+	INSERT INTO is_mandatory VALUES ('DRU101','Datateknik');
+	INSERT INTO is_mandatory VALUES ('DRU102','Datateknik');
+	INSERT INTO is_mandatory VALUES ('DRU103','Teknisk Fysik');
+
+	/*Student is waiting to get into course*/
+	INSERT INTO waiting_for VALUES ('TDA357','9206031111', '1992-06-03');
+
+	/*Course completed*/
+	INSERT INTO course_completed VALUES ('9206031111','DRU101', '5');
+
+	/*Registered for*/
+	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
