@@ -1,6 +1,7 @@
 ﻿
 DROP VIEW IF EXISTS
-StudentsFollowing,FinishedCourses;
+StudentsFollowing,FinishedCourses, Registrations, 
+PassedCourses, UnreadMandatory, PathToGraduation;
 
 DROP TABLE IF EXISTS
 departments,programs,branches,classification,courses,
@@ -262,12 +263,14 @@ CREATE TABLE host_programs (
 
 	/*Course completed*/
 	INSERT INTO course_completed VALUES ('9206031111','DRU101','5');
-	/* This student have completed the req for mandatory and additional mandatory */
+	INSERT INTO course_completed VALUES ('9206031111','DRU102','U');
+	
+	/* This student has completed the req for mandatory and additional mandatory */
 	INSERT INTO course_completed VALUES ('9411131230','TDA357','5');
 	INSERT INTO course_completed VALUES ('9411131230','DAT205','5');
 	INSERT INTO course_completed VALUES ('9411131230','DRU101','5');
-	INSERT INTO course_completed VALUES ('9411131230','DRU102','5');
-	INSERT INTO course_completed VALUES ('9411131230','DRU103','5');
+	INSERT INTO course_completed VALUES ('9411131230','DRU102','4');
+	INSERT INTO course_completed VALUES ('9411131230','DRU103','3');
 
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
@@ -276,15 +279,23 @@ CREATE TABLE host_programs (
 	INSERT INTO is_registered_for VALUES ('9311131230', 'DRU102');
 	INSERT INTO is_registered_for VALUES ('9211131230', 'MVE045');
 	INSERT INTO is_registered_for VALUES ('9111131230', 'DAT216');
+
+/*
+	INSERT INTO is_registered_for VALUES ('9411131230', 'DRU101'); SHOULD return error: student already completed course
+*/
+	
 	/*Additional Mandatory*/
 	INSERT INTO additional_mandatory VALUES ('DRU101','Software Engineering','Informationsteknik');
 	INSERT INTO additional_mandatory VALUES ('DRU102','Software Engineering','Informationsteknik');
+	INSERT INTO additional_mandatory VALUES ('DRU103','Algorithms','Datateknik');
 
 	/*Recommended*/
 	INSERT INTO is_recommended VALUES ('DAT205','Software Engineering','Informationsteknik');
 	
 	/*BelongsTo*/
+	
 	INSERT INTO belongs_to VALUES ('9411131230','Software Engineering','Informationsteknik');
+	INSERT INTO belongs_to VALUES ('9206031111','Algorithms','Datateknik');
 /*<------------------------------------INSERTION END--------------------------------->*/
 
 /*<------------------------------------VIEW START--------------------------------->*/
@@ -299,14 +310,44 @@ CREATE TABLE host_programs (
 	*/
 	
 	CREATE VIEW FinishedCourses AS
-		SELECT students.personal_number,courses.code,courses.name,courses.credit,course_completed.grade
+		SELECT students.personal_number, students.name AS student_name, courses.code,courses.name AS course_name, courses.credit,course_completed.grade
 		FROM students,courses,course_completed
 		WHERE students.personal_number = course_completed.personal_number AND courses.code = course_completed.course_code;
-		
-	/*
+/*		
 	SELECT * FROM FinishedCourses;
-	*/
+*/
+	CREATE VIEW Registrations AS
+		SELECT students.personal_number, students.name AS student_name, courses.code, courses.name AS course_name, 'registered' as status
+		FROM students, courses, is_registered_for
+		WHERE (students.personal_number = is_registered_for.personal_number AND courses.code = is_registered_for.course_code) 
+		UNION
+		SELECT students.personal_number, students.name AS student_name, courses.code, courses.name AS course_name, 'waiting' as status
+		FROM students, courses, waiting_for
+		WHERE students.personal_number = waiting_for.personal_number AND courses.code = waiting_for.code
+		ORDER BY student_name, status;
+/*		
+	SELECT * FROM Registrations;
+*/
+	CREATE VIEW PassedCourses AS
+		SELECT students.personal_number, students.name AS student_name, courses.code,courses.name AS course_name, courses.credit,course_completed.grade
+		FROM students,courses,course_completed
+		WHERE students.personal_number = course_completed.personal_number 
+			AND courses.code = course_completed.course_code 
+			AND course_completed.grade <> 'U' ;
+/*
+	SELECT * FROM PassedCourses;
+*/
 
-		
+	CREATE VIEW UnreadMandatory AS
+		/*SELECT students.program_name AS program_name, students.name AS student_name, is_mandatory.course_code AS mand
+		FROM students, is_mandatory
+		WHERE students.program_name = is_mandatory.program;
+		UNION*/
+		SELECT course_completed.personal_number, additional_mandatory.course_code, additional_mandatory.branch_name
+		FROM additional_mandatory, course_completed, belongs_to
+		WHERE additional_mandatory.course_code <> course_completed.course_code
+			AND additional_mandatory.branch_name = belongs_to.branch_name;
+
+	SELECT * FROM UnreadMandatory;
 
 /*<------------------------------------VIEW END--------------------------------->*/
