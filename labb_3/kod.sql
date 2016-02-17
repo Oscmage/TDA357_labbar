@@ -1,6 +1,7 @@
 ﻿
 DROP VIEW IF EXISTS
-StudentsFollowing,FinishedCourses;
+StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
+UnreadMandatory;
 
 DROP TABLE IF EXISTS
 departments,programs,branches,classification,courses,
@@ -267,7 +268,7 @@ CREATE TABLE host_programs (
 	INSERT INTO course_completed VALUES ('9411131230','DAT205','5');
 	INSERT INTO course_completed VALUES ('9411131230','DRU101','5');
 	INSERT INTO course_completed VALUES ('9411131230','DRU102','5');
-	INSERT INTO course_completed VALUES ('9411131230','DRU103','5');
+	INSERT INTO course_completed VALUES ('9411131230','DRU103','U');
 
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
@@ -307,6 +308,62 @@ CREATE TABLE host_programs (
 	SELECT * FROM FinishedCourses;
 	*/
 
-		
+	CREATE VIEW Registrations AS
+		(SELECT students.personal_number,students.name,courses.code,'waiting' AS status
+		FROM students,courses,waiting_for
+		WHERE students.personal_number = waiting_for.personal_number AND courses.code = waiting_for.code)
+		UNION
+		(SELECT students.personal_number,students.name,courses.code,'registered' AS status
+		FROM students,courses,is_registered_for
+		WHERE students.personal_number = is_registered_for.personal_number AND courses.code = is_registered_for.course_code
+		ORDER BY name,status);
+	/*
+	SELECT * FROM Registrations;
+	*/
 
+	CREATE VIEW PassedCourses AS
+		SELECT students.personal_number,students.name,courses.code,courses.name AS course_name,courses.credit,course_completed.grade
+		FROM students,courses,course_completed
+		WHERE students.personal_number = course_completed.personal_number AND
+			courses.code = course_completed.course_code
+			AND course_completed.grade <> 'U';
+
+	/*
+	SELECT * FROM PassedCourses
+	*/
+		
+	CREATE VIEW UnreadMandatory AS
+		--First retrieves all mandatory courses for a program but then also for branches. After that removes all courses that a student already completed (Where statement).
+		SELECT DISTINCT * FROM (
+			(
+				--Get mandatory courses for program
+				SELECT students.personal_number,students.name as student_name,courses.name,is_mandatory.course_code as mandatory
+				FROM students,is_mandatory,courses
+				WHERE students.program_name = is_mandatory.program 
+					AND courses.code = is_mandatory.course_code
+			)
+			UNION
+			(
+				--Get mandatory courses for branch
+				SELECT students.personal_number,students.name as student_name,courses.name,additional_mandatory.course_code as mandatory
+				FROM students,additional_mandatory,courses
+				WHERE students.program_name = additional_mandatory.program_name 
+					AND courses.code = additional_mandatory.course_code 
+					AND additional_mandatory.branch_name = 
+					(SELECT belongs_to.branch_name FROM belongs_to WHERE students.personal_number = belongs_to.personal_number)
+			)
+		) AS resultTable WHERE NOT EXISTS (
+					--Get courses which student has passed
+					SELECT course_completed.personal_number
+					FROM course_completed
+					WHERE (course_completed.personal_number = resultTable.personal_number 
+						AND resultTable.mandatory = course_completed.course_code
+						AND grade <> 'U'
+					)
+		);
+	/*
+	SELECT * FROM UnreadMandatory;
+	*/
+
+	
 /*<------------------------------------VIEW END--------------------------------->*/
