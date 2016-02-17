@@ -54,6 +54,7 @@ CREATE TABLE students (
 	student_id TEXT NOT NULL,
 	program_name TEXT,
 	unique (personal_number, program_name),
+	unique (student_id),
 	PRIMARY KEY (personal_number),
 	FOREIGN KEY (program_name) REFERENCES programs (name)
 );
@@ -167,6 +168,7 @@ CREATE TABLE host_programs (
 
 	/*Classifications*/	
 	INSERT INTO classification VALUES ('Math');
+	INSERT INTO classification VALUES ('Research');
 	INSERT INTO classification VALUES ('Language');
 	INSERT INTO classification VALUES ('Seminar');
 	INSERT INTO classification VALUES ('Physics');
@@ -365,5 +367,58 @@ CREATE TABLE host_programs (
 	SELECT * FROM UnreadMandatory;
 	*/
 
+	
+	CREATE VIEW PathToGraduation AS
+		SELECT personal_number, student_name, tot_credits, mandatory_left, credits_in_math, credits_in_research, nbr_seminar_courses, qualified_for_gradu
+		FROM 
+			--All students
+			(
+				SELECT personal_number,name AS student_name
+				FROM students
+			)
+			LEFT JOIN
+			--All completed courses
+			(
+				SELECT personal_number,name AS student_name,SUM(credit)
+				FROM PassedCourses
+			)
+			LEFT JOIN
+			--Unread mandatory
+			(
+				SELECT personal_number,student_name,COUNT(mandatory) as mandatory_left
+				FROM UnreadMandatory
+			)
+			LEFT JOIN
+			--total credits in math
+			(
+				SELECT personal_number, SUM(credit) AS credits_in_math
+				FROM PassedCourses
+				JOIN has_classification
+				ON PassedCourses.code = has_classification.code
+				WHERE has.classification.name = 'Math'
+			)
+			LEFT JOIN
+			--Total credits in research
+			(
+				SELECT personal_number, SUM(credit) AS credits_in_research
+				FROM PassedCourses
+				JOIN has_classification
+				ON PassedCourses.code = has_classification.code
+				WHERE has.classification.name = 'Research'
+				/*
+					CURRENTLY GOT 0 COURSES WITH CLASSIFICATION RESEARCH... FIX IT!
+				*/
+			) 
+			LEFT JOIN
+			--Total credits in 
+			(
+				SELECT personal_number, Count(credit) AS nbr_seminar_courses
+				FROM PassedCourses
+				JOIN has_classification
+				ON PassedCourses.code = has_classification.code
+				WHERE has.classification.name = 'Seminar'
+			)
+	
+	
 	
 /*<------------------------------------VIEW END--------------------------------->*/
