@@ -1,8 +1,8 @@
 ﻿
 DROP VIEW IF EXISTS
-StudentsFollowing;
+StudentsFollowing,FinishedCourses;
 
-DROP TABLE IF EXISTS 
+DROP TABLE IF EXISTS
 departments,programs,branches,classification,courses,
 students,is_prerequisite,has_classification,limited_course,
 waiting_for,course_completed,is_registered_for,
@@ -265,9 +265,19 @@ CREATE TABLE host_programs (
 		FROM students
 		LEFT JOIN belongs_to
 		ON students.personal_number=belongs_to.personal_number;
-
+	/*
 	SELECT * FROM StudentsFollowing;
-		
+	*/
 	
+	CREATE VIEW FinishedCourses AS
+		SELECT students.personal_number,courses.code,courses.name,courses.credit,course_completed.grade
+		FROM students,courses,course_completed
+		WHERE students.personal_number = course_completed.personal_number AND courses.code = course_completed.course_code;
+		
+	/*
+	SELECT * FROM FinishedCourses;
+	*/
+
+		
 
 /*<------------------------------------VIEW END--------------------------------->*/
