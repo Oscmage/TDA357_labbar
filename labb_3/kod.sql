@@ -161,6 +161,8 @@ CREATE TABLE host_programs (
 	INSERT INTO departments VALUES ('CS', 'Computer Science');
 	INSERT INTO departments VALUES ('CE', 'Computer Engineering');
 	INSERT INTO departments VALUES ('KAPPA', 'Serious Society');
+	INSERT INTO departments VALUES ('MA', 'Mathematical');
+	INSERT INTO departments VALUES ('DE', 'Design');
 
 	/*Classifications*/	
 	INSERT INTO classification VALUES ('Math');
@@ -180,12 +182,17 @@ CREATE TABLE host_programs (
 	INSERT INTO host_programs VALUES ('CS','Informationsteknik');
 
 	/*Branches*/
-	INSERT INTO branches VALUES ('Algorithms', 'Datateknik');
+	INSERT INTO branches VALUES ('Algorithms', 'Datateknik');	
 	INSERT INTO branches VALUES ('Awesomeness', 'Flipperteknik');
-
-	/*Branches*/
 	INSERT INTO branches VALUES ('Software Engineering','Informationsteknik');
 	INSERT INTO branches VALUES ('Computer Science & Algorithms','Datateknik');
+	/*
+	Duplicate
+	INSERT INTO branches VALUES ('Software Engineering','Informationsteknik');
+
+	error Informationsteknk finns inte
+	INSERT INTO branches VALUES ('Software Engineering','Informationsteknk'); 
+	*/
 	
 	/*Courses*/
 	INSERT INTO courses VALUES ('TDA357', 'Databaser', '7.5', 'CS');
@@ -193,6 +200,21 @@ CREATE TABLE host_programs (
 	INSERT INTO courses VALUES ('DRU101', 'Pinball Theory', '7.5', 'CS');
 	INSERT INTO courses VALUES ('DRU102', 'Advanced Pinball Physics', '7.5', 'CS');
 	INSERT INTO courses VALUES ('DRU103', 'Quantum Pinball Theory', '15.0', 'KAPPA');
+	INSERT INTO courses VALUES ('TDA416', 'Datastrukturer', '7.5', 'CS');
+	INSERT INTO courses VALUES ('TDA545', 'Objektorienterad programmering', '7.5', 'CS');
+	INSERT INTO courses VALUES ('EDA433', 'Grundläggande datorteknik', '7.5', 'CS');
+	INSERT INTO courses VALUES ('TMV200', 'Diskret matematik', '7.5', 'MA');
+	INSERT INTO courses VALUES ('TMV206', 'Linjär algebra', '7.5', 'MA');
+	INSERT INTO courses VALUES ('DAT216', 'Design', '7.5', 'DE');
+	INSERT INTO courses VALUES ('MVE045', 'Matematisk analys', '7.5', 'MA');
+
+/*
+	Duplicate
+	INSERT INTO courses VALUES ('TDA357', 'Databaser', '7.5', 'CS'); 
+
+	error: credit is not a number, and dept does not exist
+	INSERT INTO courses VALUES ('DAT206', 'Advanced Computer Graphics', 'Blargh', 'CF'); error: char credit + non-existing dept.
+*/
 
 	/*Prereqs*/
 	INSERT INTO is_prerequisite VALUES ('DRU102','DRU101');
@@ -200,6 +222,7 @@ CREATE TABLE host_programs (
 
 	/*Course classification*/
 	INSERT INTO has_classification VALUES ('Physics','DRU101');
+	INSERT INTO has_classification VALUES ('Math','DRU101');
 	INSERT INTO has_classification VALUES ('Seminar','DAT205');
 
 	/*Limited course*/
@@ -212,10 +235,12 @@ CREATE TABLE host_programs (
 	INSERT INTO students VALUES ('9311131230','Lars Larssson', 'larsla', 'Informationsteknik');
 	INSERT INTO students VALUES ('9211131230','Bruce Springsteen', 'bruces', 'Informationsteknik');
 	INSERT INTO students VALUES ('9111131230','Sven Svensson', 'svensv', 'Industriell Ekonomi');
-	INSERT INTO students VALUES ('9011131230','Bertil Åkesson', 'bertåk', 'Maskinteknik');
-	INSERT INTO students VALUES ('8911131230','Johan Eklund', 'johanek', 'Datateknik');
 	INSERT INTO students VALUES ('8811131230','Bon jovi', 'bonj', 'Flipperteknik');
-
+/*
+	INSERT INTO students VALUES ('9206031111','Victor Olausson', 'vicola', 'Datateknik'); check pers_no & cid. borde inte finnas 2.
+	INSERT INTO students VALUES ('90111312301','Bertil Åkesson', 'bertåk', 'Maskinteknik'); pers_no too long
+	
+*/
 	/*Mandatory for program*/
 	INSERT INTO is_mandatory VALUES ('TDA357','Informationsteknik');
 	INSERT INTO is_mandatory VALUES ('DAT205','Informationsteknik');
@@ -246,7 +271,11 @@ CREATE TABLE host_programs (
 
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
-
+	INSERT INTO is_registered_for VALUES ('9411131230', 'TDA416');
+	INSERT INTO is_registered_for VALUES ('9411131230', 'EDA433');
+	INSERT INTO is_registered_for VALUES ('9311131230', 'DRU102');
+	INSERT INTO is_registered_for VALUES ('9211131230', 'MVE045');
+	INSERT INTO is_registered_for VALUES ('9111131230', 'DAT216');
 	/*Additional Mandatory*/
 	INSERT INTO additional_mandatory VALUES ('DRU101','Software Engineering','Informationsteknik');
 	INSERT INTO additional_mandatory VALUES ('DRU102','Software Engineering','Informationsteknik');
