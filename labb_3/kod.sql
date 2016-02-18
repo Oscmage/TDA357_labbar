@@ -210,6 +210,29 @@ CREATE TABLE host_programs (
 	INSERT INTO courses VALUES ('TMV206', 'Linjär algebra', '7.5', 'MA');
 	INSERT INTO courses VALUES ('DAT216', 'Design', '7.5', 'DE');
 	INSERT INTO courses VALUES ('MVE045', 'Matematisk analys', '7.5', 'MA');
+	insert into courses (code, name, credit, department) values ('RQI213', 'Mysis', 4.0, 'CS');
+	insert into courses (code, name, credit, department) values ('JUO414', 'Sales Effectiveness', 11.9, 'KAPPA');
+	insert into courses (code, name, credit, department) values ('SDM960', 'Turbomachinery', 6.6, 'CE');
+	insert into courses (code, name, credit, department) values ('YXU113', 'Information Architecture', 8.2, 'MA');
+	insert into courses (code, name, credit, department) values ('RCL799', 'JSLint', 13.8, 'CE');
+	insert into courses (code, name, credit, department) values ('XMP106', 'Motion Graphics', 11.1, 'MA');
+	insert into courses (code, name, credit, department) values ('ZNU284', 'Komodo Edit', 5.4, 'DE');
+	insert into courses (code, name, credit, department) values ('OFY724', 'BMP', 6.9, 'DE');
+	insert into courses (code, name, credit, department) values ('RTV242', 'FX Hedging', 9.5, 'MA');
+	insert into courses (code, name, credit, department) values ('DBC858', 'vBlock', 10.7, 'DE');
+	insert into courses (code, name, credit, department) values ('TDB522', 'Lyophilization', 12.0, 'CS');
+	insert into courses (code, name, credit, department) values ('ANP395', 'FTTx', 10.6, 'MA');
+	insert into courses (code, name, credit, department) values ('QNH597', 'NCMR', 8.3, 'MA');
+	insert into courses (code, name, credit, department) values ('NVU081', 'SAP SD', 11.2, 'CE');
+	insert into courses (code, name, credit, department) values ('FXZ953', 'SBRT', 10.8, 'CE');
+	insert into courses (code, name, credit, department) values ('CEO347', 'German', 2.9, 'CE');
+	insert into courses (code, name, credit, department) values ('XOJ382', 'Food &amp; Beverage', 14.5, 'CS');
+	insert into courses (code, name, credit, department) values ('AZL030', 'Intercollegiate Athletics', 10.6, 'MA');
+	insert into courses (code, name, credit, department) values ('GEC412', 'Music Publishing', 3.0, 'DE');
+	insert into courses (code, name, credit, department) values ('LIH199', 'Sustainable Development', 14.8, 'DE');
+	insert into courses (code, name, credit, department) values ('XJQ776', 'EGPRS', 3.6, 'DE');
+	insert into courses (code, name, credit, department) values ('KLP368', 'DFR', 3.3, 'DE');
+
 
 /*
 	Duplicate
@@ -256,7 +279,6 @@ CREATE TABLE host_programs (
 	/*Student is waiting to get into course*/
 	/* Three waiting students for two different limited courses.*/
 	INSERT INTO waiting_for VALUES ('TDA357','9206031111', '1992-06-03');
-	INSERT INTO waiting_for VALUES ('TDA357','9311131230', '1992-06-04');
 	INSERT INTO waiting_for VALUES ('TDA357','9211131230', '1992-06-05');
 	
 	INSERT INTO waiting_for VALUES ('DAT205','9206031111', '1992-06-03');
@@ -271,6 +293,7 @@ CREATE TABLE host_programs (
 	INSERT INTO course_completed VALUES ('9411131230','DRU101','5');
 	INSERT INTO course_completed VALUES ('9411131230','DRU102','5');
 	INSERT INTO course_completed VALUES ('9411131230','DRU103','U');
+	INSERT INTO course_completed VALUES ('9311131230','TDA357','3');
 
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
@@ -367,57 +390,9 @@ CREATE TABLE host_programs (
 	SELECT * FROM UnreadMandatory;
 	*/
 
-	/*
-	CREATE VIEW PathToGraduation AS
-		SELECT personal_number, student_name, tot_credits, mandatory_left, credits_in_math, credits_in_research, nbr_seminar_courses,
-		CASE 
-			WHEN( 
-			credits_in_math >= 20 AND
-			credits_in_research >= 10 AND
-			nbr_seminar_courses >= 1 AND 
-			mandatory_left IS NULL AND
-			branch IS NOT NULL
-			) 
-			THEN 'Yes'
-			ELSE 'No'
-		END AS qualified_for_gradu
-		FROM
-			--All students
-			(
-				SELECT
-				FROM students
-			)
-			LEFT JOIN
-			--All completed courses
-			(
-				
-			)
-			LEFT JOIN
-			--Unread mandatory
-			(
-				
-			)
-			LEFT JOIN
-			--total credits in math
-			(
-				
-			)
-			LEFT JOIN
-			--Total credits in research
-			(
-				
-			) 
-			LEFT JOIN
-			--Total credits in 
-			(
-				
-			) 
-	*/
-	
-	
 	CREATE VIEW PathToGraduation AS
 	  WITH credits_in_seminar_courses AS 
-		(SELECT personal_number, SUM(credit) AS nbr_seminar_courses
+		(SELECT personal_number, Count(credit) AS nbr_seminar_courses
 				FROM PassedCourses
 				JOIN has_classification
 				ON PassedCourses.code = has_classification.code
@@ -445,7 +420,8 @@ CREATE TABLE host_programs (
 			(SELECT personal_number, SUM(credit) AS total_credits
 			FROM PassedCourses
 			GROUP BY (personal_number))
-	SELECT *,
+	SELECT s.personal_number,s.name,s.program_name,credits_in_seminar_courses.nbr_seminar_courses,
+	credits_in_research.credits_in_research,credits_in_math.credits_in_math,unread_mandatory.mandatory_left,completed_courses.total_credits,
 	CASE 
 		WHEN( 
 			credits_in_math >= 20 AND
@@ -456,13 +432,13 @@ CREATE TABLE host_programs (
 		THEN 'Yes'
 		ELSE 'No'
 	END AS qualified_for_graduation
-	FROM students
-	NATURAL JOIN credits_in_seminar_courses
-	NATURAL JOIN credits_in_research
-	NATURAL JOIN credits_in_math
-	NATURAL JOIN unread_mandatory
-	NATURAL JOIN completed_courses;
+	FROM students AS s
+	LEFT JOIN unread_mandatory ON s.personal_number = unread_mandatory.personal_number
+	LEFT JOIN credits_in_math ON s.personal_number = credits_in_math.personal_number
+	LEFT JOIN credits_in_research ON s.personal_number =  credits_in_research.personal_number
+	LEFT JOIN credits_in_seminar_courses ON s.personal_number =  credits_in_seminar_courses.personal_number
+	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number;
 
 	SELECT * FROM PathToGraduation;
-	
+
 /*<------------------------------------VIEW END---------------------------------> */
