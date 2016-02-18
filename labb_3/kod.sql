@@ -1,7 +1,7 @@
 ﻿
 DROP VIEW IF EXISTS
 StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
-UnreadMandatory;
+UnreadMandatory,PathToGraduation;
 
 DROP TABLE IF EXISTS
 departments,programs,branches,classification,courses,
@@ -367,58 +367,102 @@ CREATE TABLE host_programs (
 	SELECT * FROM UnreadMandatory;
 	*/
 
-	
+	/*
 	CREATE VIEW PathToGraduation AS
-		SELECT personal_number, student_name, tot_credits, mandatory_left, credits_in_math, credits_in_research, nbr_seminar_courses, qualified_for_gradu
-		FROM 
+		SELECT personal_number, student_name, tot_credits, mandatory_left, credits_in_math, credits_in_research, nbr_seminar_courses,
+		CASE 
+			WHEN( 
+			credits_in_math >= 20 AND
+			credits_in_research >= 10 AND
+			nbr_seminar_courses >= 1 AND 
+			mandatory_left IS NULL AND
+			branch IS NOT NULL
+			) 
+			THEN 'Yes'
+			ELSE 'No'
+		END AS qualified_for_gradu
+		FROM
 			--All students
 			(
-				SELECT personal_number,name AS student_name
+				SELECT
 				FROM students
 			)
 			LEFT JOIN
 			--All completed courses
 			(
-				SELECT personal_number,name AS student_name,SUM(credit)
-				FROM PassedCourses
+				
 			)
 			LEFT JOIN
 			--Unread mandatory
 			(
-				SELECT personal_number,student_name,COUNT(mandatory) as mandatory_left
-				FROM UnreadMandatory
+				
 			)
 			LEFT JOIN
 			--total credits in math
 			(
-				SELECT personal_number, SUM(credit) AS credits_in_math
-				FROM PassedCourses
-				JOIN has_classification
-				ON PassedCourses.code = has_classification.code
-				WHERE has.classification.name = 'Math'
+				
 			)
 			LEFT JOIN
 			--Total credits in research
 			(
-				SELECT personal_number, SUM(credit) AS credits_in_research
-				FROM PassedCourses
-				JOIN has_classification
-				ON PassedCourses.code = has_classification.code
-				WHERE has.classification.name = 'Research'
-				/*
-					CURRENTLY GOT 0 COURSES WITH CLASSIFICATION RESEARCH... FIX IT!
-				*/
+				
 			) 
 			LEFT JOIN
 			--Total credits in 
 			(
-				SELECT personal_number, Count(credit) AS nbr_seminar_courses
+				
+			) 
+	*/
+	
+	
+	CREATE VIEW PathToGraduation AS
+	  WITH credits_in_seminar_courses AS 
+		(SELECT personal_number, SUM(credit) AS nbr_seminar_courses
 				FROM PassedCourses
 				JOIN has_classification
 				ON PassedCourses.code = has_classification.code
-				WHERE has.classification.name = 'Seminar'
-			)
+				WHERE has_classification.name = 'Seminar'
+				GROUP BY (personal_number)),
+		credits_in_research AS		
+		(SELECT personal_number, SUM(credit) AS credits_in_research
+				FROM PassedCourses
+				JOIN has_classification
+				ON PassedCourses.code = has_classification.code
+				WHERE has_classification.name = 'Research'
+				GROUP BY (personal_number)),
+		credits_in_math AS
+		 (SELECT personal_number, SUM(credit) AS credits_in_math
+				FROM PassedCourses
+				JOIN has_classification
+				ON PassedCourses.code = has_classification.code
+				WHERE has_classification.name = 'Math'
+				GROUP BY (personal_number)),
+		unread_mandatory AS
+			(SELECT personal_number, COUNT(mandatory) as mandatory_left
+			FROM UnreadMandatory
+			GROUP BY (personal_number)),
+		completed_courses AS
+			(SELECT personal_number, SUM(credit) AS total_credits
+			FROM PassedCourses
+			GROUP BY (personal_number))
+	SELECT *,
+	CASE 
+		WHEN( 
+			credits_in_math >= 20 AND
+			credits_in_research >= 10 AND
+			nbr_seminar_courses >= 1 AND 
+			mandatory_left IS NULL
+		) 
+		THEN 'Yes'
+		ELSE 'No'
+	END AS qualified_for_graduation
+	FROM students
+	NATURAL JOIN credits_in_seminar_courses
+	NATURAL JOIN credits_in_research
+	NATURAL JOIN credits_in_math
+	NATURAL JOIN unread_mandatory
+	NATURAL JOIN completed_courses;
+
+	SELECT * FROM PathToGraduation;
 	
-	
-	
-/*<------------------------------------VIEW END--------------------------------->*/
+/*<------------------------------------VIEW END---------------------------------> */
