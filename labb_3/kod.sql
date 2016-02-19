@@ -1,16 +1,16 @@
 ﻿
-DROP VIEW IF EXISTS
-StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
-UnreadMandatory,PathToGraduation;
+--DROP VIEW IF EXISTS
+--StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
+--UnreadMandatory,PathToGraduation;
 
-DROP TABLE IF EXISTS
-departments,programs,branches,classification,courses,
-students,is_prerequisite,has_classification,limited_course,
-waiting_for,course_completed,is_registered_for,
-additional_mandatory,belongs_to,
-is_recommended,
-is_mandatory,
-host_programs;
+--DROP TABLE IF EXISTS
+--departments,programs,branches,classification,courses,
+--students,is_prerequisite,has_classification,limited_course,
+--waiting_for,course_completed,is_registered_for,
+--additional_mandatory,belongs_to,
+--is_recommended,
+--is_mandatory,
+--host_programs;
 
 /*<----------------------------TABLE START--------------------------->*/
 CREATE TABLE departments (
