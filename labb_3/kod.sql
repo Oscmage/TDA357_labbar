@@ -1,16 +1,16 @@
 ﻿
---DROP VIEW IF EXISTS
---StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
---UnreadMandatory,PathToGraduation;
+DROP VIEW IF EXISTS
+StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
+UnreadMandatory,PathToGraduation, Test;
 
---DROP TABLE IF EXISTS
---departments,programs,branches,classification,courses,
---students,is_prerequisite,has_classification,limited_course,
---waiting_for,course_completed,is_registered_for,
---additional_mandatory,belongs_to,
---is_recommended,
---is_mandatory,
---host_programs;
+DROP TABLE IF EXISTS
+departments,programs,branches,classification,courses,
+students,is_prerequisite,has_classification,limited_course,
+waiting_for,course_completed,is_registered_for,
+additional_mandatory,belongs_to,
+is_recommended,
+is_mandatory,
+host_programs;
 
 /*<----------------------------TABLE START--------------------------->*/
 CREATE TABLE departments (
@@ -155,6 +155,7 @@ CREATE TABLE host_programs (
 
 /*<----------------------------TABLE END--------------------------->*/
 
+
 /*<------------------------------------INSERTION START--------------------------------->*/
 
 
@@ -179,7 +180,6 @@ CREATE TABLE host_programs (
 	INSERT INTO programs VALUES ('Industriell Ekonomi', 'I');
 	INSERT INTO programs VALUES ('Maskinteknik', 'M');
 	INSERT INTO programs VALUES ('Flipperteknik', 'F');
-
 
 	/*Host Program*/
 	INSERT INTO host_programs VALUES ('CS','Informationsteknik');
@@ -234,22 +234,18 @@ CREATE TABLE host_programs (
 	insert into courses (code, name, credit, department) values ('KLP368', 'DFR', 3.3, 'DE');
 
 
-/*
-	Duplicate
-	INSERT INTO courses VALUES ('TDA357', 'Databaser', '7.5', 'CS'); 
-
-	error: credit is not a number, and dept does not exist
-	INSERT INTO courses VALUES ('DAT206', 'Advanced Computer Graphics', 'Blargh', 'CF'); error: char credit + non-existing dept.
-*/
-
 	/*Prereqs*/
 	INSERT INTO is_prerequisite VALUES ('DRU102','DRU101');
+	INSERT INTO is_prerequisite VALUES ('DRU101','DRU102');
 	INSERT INTO is_prerequisite VALUES ('DRU103','DRU102');
 
 	/*Course classification*/
 	INSERT INTO has_classification VALUES ('Physics','DRU101');
 	INSERT INTO has_classification VALUES ('Math','DRU101');
+	INSERT INTO has_classification VALUES ('Math','DRU102');
+	INSERT INTO has_classification VALUES ('Math','DRU103');
 	INSERT INTO has_classification VALUES ('Seminar','DAT205');
+	INSERT INTO has_classification VALUES ('Research','LIH199');
 
 	/*Limited course*/
 	INSERT INTO limited_course VALUES ('TDA357','1');
@@ -262,11 +258,8 @@ CREATE TABLE host_programs (
 	INSERT INTO students VALUES ('9211131230','Bruce Springsteen', 'bruces', 'Informationsteknik');
 	INSERT INTO students VALUES ('9111131230','Sven Svensson', 'svensv', 'Industriell Ekonomi');
 	INSERT INTO students VALUES ('8811131230','Bon jovi', 'bonj', 'Flipperteknik');
-/*
-	INSERT INTO students VALUES ('9206031111','Victor Olausson', 'vicola', 'Datateknik'); check pers_no & cid. borde inte finnas 2.
-	INSERT INTO students VALUES ('90111312301','Bertil Åkesson', 'bertåk', 'Maskinteknik'); pers_no too long
-	
-*/
+	INSERT INTO students VALUES ('4206120001','Old Man', 'gammal', 'Flipperteknik');
+
 	/*Mandatory for program*/
 	INSERT INTO is_mandatory VALUES ('TDA357','Informationsteknik');
 	INSERT INTO is_mandatory VALUES ('DAT205','Informationsteknik');
@@ -283,23 +276,54 @@ CREATE TABLE host_programs (
 	
 	INSERT INTO waiting_for VALUES ('DAT205','9206031111', '1992-06-03');
 	INSERT INTO waiting_for VALUES ('DAT205','9311131230', '1992-06-04');
+	INSERT INTO waiting_for VALUES ('DAT205','8811131230', '1992-06-04');
 	INSERT INTO waiting_for VALUES ('DAT205','9211131230', '1992-06-05');
-
-	/*Course completed*/
-	INSERT INTO course_completed VALUES ('9206031111','DRU101','5');
-	/* This student have completed the req for mandatory and additional mandatory */
+	
+	/* Oscar Evertsson is allowed to graduate. changing any value to U changes qualify */
 	INSERT INTO course_completed VALUES ('9411131230','TDA357','5');
 	INSERT INTO course_completed VALUES ('9411131230','DAT205','5');
 	INSERT INTO course_completed VALUES ('9411131230','DRU101','5');
 	INSERT INTO course_completed VALUES ('9411131230','DRU102','5');
-	INSERT INTO course_completed VALUES ('9411131230','DRU103','U');
-	INSERT INTO course_completed VALUES ('9311131230','TDA357','3');
+	INSERT INTO course_completed VALUES ('9411131230','DRU103','3');
+	INSERT INTO course_completed VALUES ('9411131230','LIH199','3');
+
+	/*Victor Olausson has only 1 mandatory_left*/
+	INSERT INTO course_completed VALUES ('9206031111','TDA357','5');
+	INSERT INTO course_completed VALUES ('9206031111','DRU101','U'); --This needs to be done (tested)
+	INSERT INTO course_completed VALUES ('9206031111','DRU102','5');
+	INSERT INTO course_completed VALUES ('9206031111','DRU103','3');
+	INSERT INTO course_completed VALUES ('9206031111','DAT205','4');
+	INSERT INTO course_completed VALUES ('9206031111','LIH199','3');
+	
+	/*Bon Jovi has too few seminar courses*/
+	INSERT INTO course_completed VALUES ('8811131230','TDA357','5');
+	INSERT INTO course_completed VALUES ('8811131230','DRU101','3'); 
+	INSERT INTO course_completed VALUES ('8811131230','DRU102','5');
+	INSERT INTO course_completed VALUES ('8811131230','DRU103','3');
+	INSERT INTO course_completed VALUES ('8811131230','DAT205','U'); --This needs to be done (tested)
+	INSERT INTO course_completed VALUES ('8811131230','LIH199','3');
+	
+	/*Lars Larsson has too few research credits*/
+	INSERT INTO course_completed VALUES ('9311131230','TDA357','5');
+	INSERT INTO course_completed VALUES ('9311131230','DAT205','5');
+	INSERT INTO course_completed VALUES ('9311131230','DRU101','5');
+	INSERT INTO course_completed VALUES ('9311131230','DRU102','5');
+	INSERT INTO course_completed VALUES ('9311131230','DRU103','3');
+	INSERT INTO course_completed VALUES ('9311131230','LIH199','U'); --This needs to be done (tested)
+
+	/*Bruce Springsteen has too few math credits*/
+	INSERT INTO course_completed VALUES ('9211131230','TDA357','5');
+	INSERT INTO course_completed VALUES ('9211131230','DAT205','5');
+	INSERT INTO course_completed VALUES ('9211131230','DRU101','5');
+	INSERT INTO course_completed VALUES ('9211131230','DRU102','5');
+	INSERT INTO course_completed VALUES ('9211131230','DRU103','U'); --This needs to be done (tested)
+	INSERT INTO course_completed VALUES ('9211131230','LIH199','5');
 
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
-	INSERT INTO is_registered_for VALUES ('9411131230', 'TDA416');
+	INSERT INTO is_registered_for VALUES ('9411131230', 'TDA357');
 	INSERT INTO is_registered_for VALUES ('9411131230', 'EDA433');
-	INSERT INTO is_registered_for VALUES ('9311131230', 'DRU102');
+	INSERT INTO is_registered_for VALUES ('9311131230', 'TDA357');
 	INSERT INTO is_registered_for VALUES ('9211131230', 'MVE045');
 	INSERT INTO is_registered_for VALUES ('9111131230', 'DAT216');
 	/*Additional Mandatory*/
@@ -309,7 +333,8 @@ CREATE TABLE host_programs (
 	/*Recommended*/
 	INSERT INTO is_recommended VALUES ('DAT205','Software Engineering','Informationsteknik');
 	
-	/*BelongsTo*/
+	
+	/*BelongsTo*/ 
 	INSERT INTO belongs_to VALUES ('9411131230','Software Engineering','Informationsteknik');
 /*<------------------------------------INSERTION END--------------------------------->*/
 
