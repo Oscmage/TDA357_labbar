@@ -214,6 +214,24 @@ CREATE TABLE host_programs (
 	insert into courses (code, name, credit, department) values ('JUO414', 'Sales Effectiveness', 11.9, 'KAPPA');
 	insert into courses (code, name, credit, department) values ('SDM960', 'Turbomachinery', 6.6, 'CE');
 	insert into courses (code, name, credit, department) values ('YXU113', 'Information Architecture', 8.2, 'MA');
+	insert into courses (code, name, credit, department) values ('RCL799', 'JSLint', 13.8, 'CE');
+	insert into courses (code, name, credit, department) values ('XMP106', 'Motion Graphics', 11.1, 'MA');
+	insert into courses (code, name, credit, department) values ('ZNU284', 'Komodo Edit', 5.4, 'DE');
+	insert into courses (code, name, credit, department) values ('OFY724', 'BMP', 6.9, 'DE');
+	insert into courses (code, name, credit, department) values ('RTV242', 'FX Hedging', 9.5, 'MA');
+	insert into courses (code, name, credit, department) values ('DBC858', 'vBlock', 10.7, 'DE');
+	insert into courses (code, name, credit, department) values ('TDB522', 'Lyophilization', 12.0, 'CS');
+	insert into courses (code, name, credit, department) values ('ANP395', 'FTTx', 10.6, 'MA');
+	insert into courses (code, name, credit, department) values ('QNH597', 'NCMR', 8.3, 'MA');
+	insert into courses (code, name, credit, department) values ('NVU081', 'SAP SD', 11.2, 'CE');
+	insert into courses (code, name, credit, department) values ('FXZ953', 'SBRT', 10.8, 'CE');
+	insert into courses (code, name, credit, department) values ('CEO347', 'German', 2.9, 'CE');
+	insert into courses (code, name, credit, department) values ('XOJ382', 'Food &amp; Beverage', 14.5, 'CS');
+	insert into courses (code, name, credit, department) values ('AZL030', 'Intercollegiate Athletics', 10.6, 'MA');
+	insert into courses (code, name, credit, department) values ('GEC412', 'Music Publishing', 3.0, 'DE');
+	insert into courses (code, name, credit, department) values ('LIH199', 'Sustainable Development', 14.8, 'DE');
+	insert into courses (code, name, credit, department) values ('XJQ776', 'EGPRS', 3.6, 'DE');
+	insert into courses (code, name, credit, department) values ('KLP368', 'DFR', 3.3, 'DE');
 
 
 
