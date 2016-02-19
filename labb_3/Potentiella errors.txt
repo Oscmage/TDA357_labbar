@@ -3,11 +3,11 @@ ANTECKINGAR:
 
 possible errors:
 /*---------------------------------------------------------------*/
-rad 277-279: student waiting_for course he has completed.
+rad 277-279: student waiting_for course he has completed. //Probably only triggers who can solve this issue. (When insert on both make sure it doesn't exist in								// the other).
 
-rad 322, 325: student is_registered to a course he has completed.
+rad 322, 325: student is_registered to a course he has completed. //Same here, def a trigger.
 
-is_prerequisite can have two courses be prerequisites to each other.
+is_prerequisite can have two courses be prerequisites to each other. //I think it's a trigger
 
 is_registered_for can have more students registered than its capacity. should teachers be able to override this perhaps?
 
@@ -18,6 +18,8 @@ definitive error:
 /*----------------------------------------------------------------*/
 
 if two students are in waiting_for, with the same course code and same date, error is present. following example:
+
+ //Fixed this error by changing the type to "TIMESTAMP" instead of date.
 
 ERROR:  duplicate key value violates unique constraint "waiting_for_code_since_date_key"
 DETAIL:  Key (code, since_date)=(DAT205, 1992-06-04) already exists.
