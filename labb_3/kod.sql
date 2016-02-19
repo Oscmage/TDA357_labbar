@@ -31,7 +31,7 @@ CREATE TABLE branches (
 	name TEXT,
 	program_name TEXT,
 	PRIMARY KEY (name,program_name),
-	FOREIGN KEY (program_name) REFERENCES programs (name)
+	FOREIGN KEY (program_name) REFERENCES programs (name) ON DELETE CASCADE
 );
 
 CREATE TABLE classification (
@@ -42,10 +42,10 @@ CREATE TABLE classification (
 CREATE TABLE courses (
 	code TEXT ,
 	name TEXT NOT NULL,
-	credit FLOAT NOT NULL,
-	department TEXT NOT NULL,
+	credit FLOAT NOT NULL CHECK (credit > 0),
+	department TEXT,
 	PRIMARY KEY (code),
-	FOREIGN KEY (department) REFERENCES departments (abbreviation)
+	FOREIGN KEY (department) REFERENCES departments (abbreviation) ON DELETE SET NULL
 );
 
 CREATE TABLE students (
@@ -56,40 +56,40 @@ CREATE TABLE students (
 	unique (personal_number, program_name),
 	unique (student_id),
 	PRIMARY KEY (personal_number),
-	FOREIGN KEY (program_name) REFERENCES programs (name)
+	FOREIGN KEY (program_name) REFERENCES programs (name) ON DELETE SET NULL
 );
 
 CREATE TABLE is_prerequisite (
 	code TEXT,
 	prerequisite TEXT,
 	PRIMARY KEY (code,prerequisite),
-	FOREIGN KEY (code) REFERENCES courses (code),
-	FOREIGN KEY (prerequisite)  REFERENCES courses (code)
+	FOREIGN KEY (code) REFERENCES courses (code) ON DELETE CASCADE,
+	FOREIGN KEY (prerequisite)  REFERENCES courses (code) ON DELETE CASCADE
 );
 
 CREATE TABLE has_classification (
 	name TEXT,
 	code TEXT,
 	PRIMARY KEY (name,code),
-	FOREIGN KEY (name) REFERENCES classification (name),
-	FOREIGN KEY (code) REFERENCES courses (code)
+	FOREIGN KEY (name) REFERENCES classification (name) ON DELETE CASCADE,
+	FOREIGN KEY (code) REFERENCES courses (code) ON DELETE CASCADE
 );
 
 CREATE TABLE limited_course (
 	code TEXT,
 	max_amount INT CHECK (max_amount > 0) NOT NULL,
 	PRIMARY KEY (code),
-	FOREIGN KEY (code) REFERENCES courses (code)
+	FOREIGN KEY (code) REFERENCES courses (code) ON DELETE CASCADE
 );
 
 CREATE TABLE waiting_for (
 	code TEXT,
 	personal_number CHAR(10),
-	since_date DATE NOT NULL,
+	since_date TIMESTAMP NOT NULL,
 	unique (code, since_date),
 	PRIMARY KEY (code,personal_number),
-	FOREIGN KEY (code) REFERENCES courses (code),
-	FOREIGN KEY (personal_number) REFERENCES students (personal_number)
+	FOREIGN KEY (code) REFERENCES courses (code) ON DELETE CASCADE,
+	FOREIGN KEY (personal_number) REFERENCES students (personal_number) ON DELETE CASCADE
 );
 
 
@@ -98,16 +98,16 @@ CREATE TABLE course_completed (
 	course_code CHAR(6),
 	grade CHAR(1) CHECK (grade IN ('3','4','5','U')) NOT NULL,
 	PRIMARY KEY (personal_number,course_code),
-	FOREIGN KEY (personal_number) REFERENCES students (personal_number),
-	FOREIGN KEY (course_code) REFERENCES courses (code)
+	FOREIGN KEY (personal_number) REFERENCES students (personal_number),--No delete here or anything like that since we probably wanna keep a register of finished students
+	FOREIGN KEY (course_code) REFERENCES courses (code) --Same thinking as comment above
 );
 
 CREATE TABLE is_registered_for (
 	personal_number CHAR(10),
 	course_code CHAR(6),
 	PRIMARY KEY (personal_number,course_code),
-	FOREIGN KEY (personal_number) REFERENCES students (personal_number),
-	FOREIGN KEY (course_code) REFERENCES courses (code)
+	FOREIGN KEY (personal_number) REFERENCES students (personal_number) ON DELETE CASCADE,
+	FOREIGN KEY (course_code) REFERENCES courses (code) ON DELETE CASCADE
 );
 
 CREATE TABLE additional_mandatory (
@@ -115,8 +115,8 @@ CREATE TABLE additional_mandatory (
 	branch_name TEXT,
 	program_name TEXT,
 	PRIMARY KEY (course_code,branch_name,program_name),
-	FOREIGN KEY (course_code) REFERENCES courses (code),
-	FOREIGN KEY (branch_name, program_name) REFERENCES branches (name, program_name) 
+	FOREIGN KEY (course_code) REFERENCES courses (code) ON DELETE CASCADE,
+	FOREIGN KEY (branch_name, program_name) REFERENCES branches (name, program_name) ON DELETE CASCADE
 );
 
 CREATE TABLE is_recommended (
@@ -124,16 +124,16 @@ CREATE TABLE is_recommended (
 	branch_name TEXT,
 	program_name TEXT,
 	PRIMARY KEY (course_code,branch_name,program_name),
-	FOREIGN KEY (course_code) REFERENCES courses (code),
-	FOREIGN KEY (branch_name, program_name) REFERENCES branches (name, program_name) 
+	FOREIGN KEY (course_code) REFERENCES courses (code) ON DELETE CASCADE,
+	FOREIGN KEY (branch_name, program_name) REFERENCES branches (name, program_name) ON DELETE CASCADE
 );
 
 CREATE TABLE is_mandatory (
 	course_code CHAR(6),
 	program TEXT,
 	PRIMARY KEY (course_code,program),
-	FOREIGN KEY (course_code) REFERENCES courses (code),
-	FOREIGN KEY (program) REFERENCES programs (name)
+	FOREIGN KEY (course_code) REFERENCES courses (code) ON DELETE CASCADE,
+	FOREIGN KEY (program) REFERENCES programs (name) ON DELETE CASCADE
 );
 
 CREATE TABLE belongs_to ( 
@@ -141,16 +141,16 @@ CREATE TABLE belongs_to (
 	branch_name TEXT NOT NULL,
 	program_name TEXT NOT NULL,
 	PRIMARY KEY (personal_number),
-	FOREIGN KEY (personal_number,program_name) REFERENCES students (personal_number,program_name),
-	FOREIGN KEY (branch_name, program_name) REFERENCES branches (name,program_name)
+	FOREIGN KEY (personal_number,program_name) REFERENCES students (personal_number,program_name) ON DELETE CASCADE,
+	FOREIGN KEY (branch_name, program_name) REFERENCES branches (name,program_name) ON DELETE CASCADE
 );
 
 CREATE TABLE host_programs (
 	abbreviations TEXT,
 	program_name TEXT,
 	PRIMARY KEY (abbreviations,program_name),
-	FOREIGN KEY (abbreviations) REFERENCES departments (abbreviation),
-	FOREIGN KEY (program_name) REFERENCES programs (name)
+	FOREIGN KEY (abbreviations) REFERENCES departments (abbreviation) ON DELETE CASCADE,
+	FOREIGN KEY (program_name) REFERENCES programs (name) ON DELETE CASCADE
 );
 
 /*<----------------------------TABLE END--------------------------->*/
@@ -275,7 +275,9 @@ CREATE TABLE host_programs (
 	INSERT INTO waiting_for VALUES ('TDA357','9211131230', '1992-06-05');
 	
 	INSERT INTO waiting_for VALUES ('DAT205','9206031111', '1992-06-03');
-	INSERT INTO waiting_for VALUES ('DAT205','9311131230', '1992-06-04');
+	
+	INSERT INTO waiting_for VALUES ('DAT205','9311131230', '1992-06-04 07:40:10');
+	
 	INSERT INTO waiting_for VALUES ('DAT205','8811131230', '1992-06-04');
 	INSERT INTO waiting_for VALUES ('DAT205','9211131230', '1992-06-05');
 	
