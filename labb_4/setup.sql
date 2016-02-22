@@ -495,11 +495,10 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
 			RAISE EXCEPTION 'Student hasnt read the prerequisite courses for this course';
 		END IF; 
 
+
 		-- Student is already in waiting for this course or already registered
-		IF 
-			EXISTS (SELECT * FROM is_waiting_for AS iwf WHERE iwf.code = NEW.course_code AND iwf.personal_number = NEW.personal_number) 
-		OR 
-			EXISTS (SELECT * FROM is_registered_for AS irf WHERE irf.course_code = NEW.course_code AND irf.personal_number = NEW.personal_number)
+		IF EXISTS 
+			(SELECT * FROM Registrations AS reg WHERE reg.code = NEW.course_code AND reg.personal_number = NEW.personal_number)
 		THEN
 			RAISE EXCEPTION 'Student is already waiting for or registered for this course';
 		END IF;
@@ -508,7 +507,7 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
 		SELECT lc.maximum_amount INTO maximumAmount FROM limited_course AS lc WHERE NEW.couse_code = limited_course.code;
 		
 		-- Get current registered for the course
-		SELECT Count(*) INTO currentReg FROM is_registered_for AS irf WHERE NEW.course_code = irf.course_code; 
+		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.course_code = reg.code AND reg.status = 'registered'; 
 
  		-- Is course a limited course?
 		IF maximumAmount IS NOT NULL THEN
@@ -529,7 +528,7 @@ $emp_stamp$ LANGUAGE plpgsql;
 
 
 
-CREATE TRIGGER register BEFORE INSERT ON is_registered_for
+CREATE TRIGGER register INSTEAD OF INSERT ON Registrations
     FOR EACH ROW EXECUTE PROCEDURE register();
 
 
@@ -541,12 +540,16 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
 		maximumAmount int;
 		currentReg int;
 	BEGIN
+		-- Delete student from both possible table
+		DELETE FROM is_waiting_for WHERE code = OLD.code AND personal_number = OLD.personal_number;
+		DELETE FROM is_registered_for WHERE personal_number = OLD.personal_number AND course_code = OLD.code;
+
 		-- Get maximum amount for the course
-		SELECT lc.maximum_amount INTO maximumAmount FROM limited_course AS lc WHERE OLD.couse_code = limited_course.code;
+		SELECT lc.maximum_amount INTO maximumAmount FROM limited_course AS lc WHERE NEW.couse_code = limited_course.code;
 		/* !CHECK IF THIS IS THE SAME THING AS 'INTO'! maximumAmount = (SELECT lc.maximum_amount FROM limited_course AS lc WHERE OLD.couse_code = limited_course.code);*/
 		
 		-- Get current registered for the course
-		SELECT Count(*) INTO currentReg FROM is_registered_for AS irf WHERE OLD.course_code = irf.course_code; 
+		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.course_code = reg.code AND reg.status = 'registered'; 
 
 		IF currectReg < maximumAmount THEN
 			-- Take first from waiting list and register for the course
@@ -560,7 +563,7 @@ $emp_stamp$ LANGUAGE plpgsql;
 
 
 
-CREATE TRIGGER unregister AFTER DELETE ON is_registered_for
+CREATE TRIGGER unregister INSTEAD OF DELETE ON Registrations
     FOR EACH ROW EXECUTE PROCEDURE unregister();
 
     
