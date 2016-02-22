@@ -1,6 +1,5 @@
 ﻿
 
-
 DROP TABLE IF EXISTS
 departments,programs,branches,classification,courses,
 students,is_prerequisite,has_classification,limited_course,
@@ -478,9 +477,9 @@ CREATE TABLE host_programs (
 	CREATE VIEW CourseQueuePositions AS
 		SELECT code,since_date,ROW_NUMBER() OVER (PARTITION BY code ORDER BY since_date) AS position
 		FROM waiting_for;
-
+	/*
 	SELECT * FROM CourseQueuePositions;
-	
+	*/
 
 	
 /*<------------------------------------VIEW END---------------------------------> */
@@ -490,34 +489,62 @@ CREATE TABLE host_programs (
 
 
 /*<------------------------------------Triggers--------------------------------->  */
-/*
-CREATE FUNCTION is_full() RETURNS trigger AS $emp_stamp$
 
-    BEGIN
-        -- Check 
-        IF 	
+CREATE OR REPLACE FUNCTION is_full() RETURNS trigger AS $emp_stamp$
+	DECLARE
+		maximumAmount int;
+		currentReg int;
+	BEGIN
+		-- Has already passed course
+		IF exists(SELECT * FROM PassedCourses AS pc WHERE NEW.personal_number = pc.personal_number AND NEW.course_code = pc.course_code) THEN
+			RAISE EXCEPTION 'Student has already passed this course';
+		END IF;
+		
+		-- Check if student hasn't read prerequisite
+		IF EXISTS (
+				SELECT prerequisite as course
+				FROM is_prerequisite AS ip 
+				WHERE ip.code = NEW.course_code
 
-        (SELECT registeredStudentsForCourse
-		FROM registered_students_for_limited_course as rsflc
-		WHERE NEW.code = rsflc.code) 
-        NEW.code
-        END IF;
-        IF NEW.salary IS NULL THEN
-            RAISE EXCEPTION '% cannot have null salary', NEW.empname;
-        END IF;
+				EXCEPT 
 
-        -- Who works for us when she must pay for it?
-        IF NEW.salary < 0 THEN
-            RAISE EXCEPTION '% cannot have a negative salary', NEW.empname;
-        END IF;
+				SELECT code as course 
+				FROM PassedCourses AS pc
+				WHERE NEW.personal_number = pc.personal_number AND NEW.course_code = pc.course_code
+			) 
+		THEN
+			--You havn't read all prerequisite
+			RAISE EXCEPTION 'Student hasnt read the prerequisite courses for this course';
+		END IF; 
 
-        -- Remember who changed the payroll when
-        NEW.last_date := current_timestamp;
-        NEW.last_user := current_user;
-        RETURN NEW;
-    END;
+		-- Student is already in waiting for this course or already registered
+		IF 
+			EXISTS (SELECT * FROM is_waiting_for AS iwf WHERE iwf.code = NEW.course_code AND iwf.personal_number = NEW.personal_number) 
+		OR 
+			EXISTS (SELECT * FROM is_registered_for AS irf WHERE irf.course_code = NEW.course_code AND irf.personal_number = NEW.personal_number)
+		THEN
+			RAISE EXCEPTION 'Student is already waiting for or registered for this course';
+		END IF;
+
+		-- Get maximum amount for the course
+		SELECT lc.maximum_amount INTO maximumAmount FROM limited_course AS lc WHERE NEW.couse_code = limited_course.code;
+		
+		-- Get current registered for the course
+		SELECT Count(*) INTO currentReg FROM is_registered_for AS irf WHERE NEW.course_code = irf.course_code; 
+
+ 		-- Is course a limited course?
+		IF maximumAmount IS NOT NULL THEN
+			-- Is course full?
+			IF (currentReg >= maximumAmount) THEN 
+				-- Put student on waiting list
+			ELSE 
+				-- Put student is_registered_for
+			END IF;
+		ELSE
+			-- Put student in is_registered_for
+		END IF;
+         END;
 $emp_stamp$ LANGUAGE plpgsql;
 
 CREATE TRIGGER register BEFORE INSERT ON is_registered_for
     FOR EACH ROW EXECUTE PROCEDURE is_full();
-*/
