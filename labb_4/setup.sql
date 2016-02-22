@@ -349,18 +349,11 @@ CREATE TABLE host_programs (
 		FROM students
 		LEFT JOIN belongs_to
 		ON students.personal_number=belongs_to.personal_number;
-	/*
-	SELECT * FROM StudentsFollowing;
-	*/
 	
 	CREATE VIEW FinishedCourses AS
 		SELECT students.personal_number,courses.code,courses.name,courses.credit,course_completed.grade
 		FROM students,courses,course_completed
 		WHERE students.personal_number = course_completed.personal_number AND courses.code = course_completed.course_code;
-		
-	/*
-	SELECT * FROM FinishedCourses;
-	*/
 
 	CREATE VIEW Registrations AS
 			(SELECT students.personal_number,students.name,courses.code,'waiting' AS status
@@ -372,9 +365,6 @@ CREATE TABLE host_programs (
 			WHERE students.personal_number = is_registered_for.personal_number AND courses.code = is_registered_for.course_code
 			ORDER BY name,status);
 
-	/*
-	SELECT * FROM Registrations;
-	*/
 
 	CREATE VIEW PassedCourses AS
 		SELECT students.personal_number,students.name,courses.code,courses.name AS course_name,courses.credit,course_completed.grade
@@ -383,9 +373,6 @@ CREATE TABLE host_programs (
 			courses.code = course_completed.course_code
 			AND course_completed.grade <> 'U';
 
-	/*
-	SELECT * FROM PassedCourses
-	*/
 		
 	CREATE VIEW UnreadMandatory AS
 		--First retrieves all mandatory courses for a program but then also for branches. After that removes all courses that a student already completed (Where statement).
@@ -416,9 +403,6 @@ CREATE TABLE host_programs (
 						AND grade <> 'U'
 					)
 		);
-	/*
-	SELECT * FROM UnreadMandatory;
-	*/
 
 	CREATE VIEW PathToGraduation AS
 	  WITH credits_in_seminar_courses AS 
@@ -468,18 +452,10 @@ CREATE TABLE host_programs (
 	LEFT JOIN credits_in_research ON s.personal_number =  credits_in_research.personal_number
 	LEFT JOIN credits_in_seminar_courses ON s.personal_number =  credits_in_seminar_courses.personal_number
 	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number;
-
-	/*
-	SELECT * FROM PathToGraduation;
-	*/
-
 	
 	CREATE VIEW CourseQueuePositions AS
 		SELECT code,since_date,ROW_NUMBER() OVER (PARTITION BY code ORDER BY since_date) AS position
 		FROM waiting_for;
-	/*
-	SELECT * FROM CourseQueuePositions;
-	*/
 
 	
 /*<------------------------------------VIEW END---------------------------------> */
@@ -552,5 +528,28 @@ $emp_stamp$ LANGUAGE plpgsql;
 CREATE TRIGGER register BEFORE INSERT ON is_registered_for
     FOR EACH ROW EXECUTE PROCEDURE is_full();
 
-
     
+
+/*
+<--------------	TESTING--------->
+*/
+
+--SELECT * FROM StudentsFollowing;
+
+--SELECT * FROM FinishedCourses;
+
+--SELECT * FROM Registrations;
+
+--SELECT * FROM PassedCourses;
+
+--SELECT * FROM PathToGraduation;
+
+--SELECT * FROM CourseQueuePositions;
+
+--SELECT * FROM UnreadMandatory;
+
+
+
+/*
+<--------------END TESTING----->
+*/
