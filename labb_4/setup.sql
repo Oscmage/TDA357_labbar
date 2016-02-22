@@ -466,7 +466,9 @@ CREATE TABLE host_programs (
 
 /*<------------------------------------Triggers--------------------------------->  */
 
-CREATE OR REPLACE FUNCTION is_full() RETURNS trigger AS $emp_stamp$
+
+CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
+
 	DECLARE
 		maximumAmount int;
 		currentReg int;
@@ -525,8 +527,41 @@ CREATE OR REPLACE FUNCTION is_full() RETURNS trigger AS $emp_stamp$
          END;
 $emp_stamp$ LANGUAGE plpgsql;
 
+
+
 CREATE TRIGGER register BEFORE INSERT ON is_registered_for
-    FOR EACH ROW EXECUTE PROCEDURE is_full();
+    FOR EACH ROW EXECUTE PROCEDURE register();
+
+
+--Trigger two
+
+
+CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
+	DECLARE
+		maximumAmount int;
+		currentReg int;
+	BEGIN
+		-- Get maximum amount for the course
+		SELECT lc.maximum_amount INTO maximumAmount FROM limited_course AS lc WHERE OLD.couse_code = limited_course.code;
+		/* !CHECK IF THIS IS THE SAME THING AS 'INTO'! maximumAmount = (SELECT lc.maximum_amount FROM limited_course AS lc WHERE OLD.couse_code = limited_course.code);*/
+		
+		-- Get current registered for the course
+		SELECT Count(*) INTO currentReg FROM is_registered_for AS irf WHERE OLD.course_code = irf.course_code; 
+
+		IF currectReg < maximumAmount THEN
+			-- Take first from waiting list and register for the course
+			WITH studentFirstInQueue AS (
+				SELECT cqp.personal_number, cqp.code FROM CourseQueuePositions AS cqp WHERE OLD.course_code = cqp.code AND cqp.position = '1'
+			)
+			INSERT INTO is_registered_for VALUES (studentFirstInQueue.personal_number, studentFirstInQueue.code);
+		END IF;
+         END;
+$emp_stamp$ LANGUAGE plpgsql;
+
+
+
+CREATE TRIGGER unregister AFTER DELETE ON is_registered_for
+    FOR EACH ROW EXECUTE PROCEDURE unregister();
 
     
 
