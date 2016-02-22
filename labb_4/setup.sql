@@ -539,6 +539,7 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
 	DECLARE
 		maximumAmount int;
 		currentReg int;
+		totWaitingStudents int;
 	BEGIN
 		-- Delete student from both possible table
 		DELETE FROM is_waiting_for WHERE code = OLD.code AND personal_number = OLD.personal_number;
@@ -552,11 +553,23 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
 		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.course_code = reg.code AND reg.status = 'registered'; 
 
 		IF currectReg < maximumAmount THEN
+		
 			-- Take first from waiting list and register for the course
 			WITH studentFirstInQueue AS (
 				SELECT cqp.personal_number, cqp.code FROM CourseQueuePositions AS cqp WHERE OLD.course_code = cqp.code AND cqp.position = '1'
 			)
-			INSERT INTO is_registered_for VALUES (studentFirstInQueue.personal_number, studentFirstInQueue.code);
+
+			-- Count the amount of waiting students.
+			SELECT Count (*) INTO totWaitingStudents FROM studentFirstInqueue;
+			
+			IF totWaitingStudent > 0 THEN
+	
+				-- Delete the first student from waiting list
+				DELETE FROM is_waiting_for WHERE code = studentFirstInQueue.code AND personal_number = studentFirstInQueue.personal_number;
+
+				-- Insert the old first in queue student into registrations
+				INSERT INTO Registrations VALUES (studentFirstInQueue.personal_number, studentFirstInQueue.name, studentFirstInQueue.code,'registered');
+			END IF;
 		END IF;
          END;
 $emp_stamp$ LANGUAGE plpgsql;
