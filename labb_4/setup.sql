@@ -537,14 +537,20 @@ CREATE OR REPLACE FUNCTION is_full() RETURNS trigger AS $emp_stamp$
 			-- Is course full?
 			IF (currentReg >= maximumAmount) THEN 
 				-- Put student on waiting list
+				INSERT INTO waiting_for VALUES (NEW.course_code, NEW.personal_number, CURRENT_TIMESTAMP);
 			ELSE 
 				-- Put student is_registered_for
+				INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.course_code);
 			END IF;
 		ELSE
 			-- Put student in is_registered_for
+			INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.course_code);
 		END IF;
          END;
 $emp_stamp$ LANGUAGE plpgsql;
 
 CREATE TRIGGER register BEFORE INSERT ON is_registered_for
     FOR EACH ROW EXECUTE PROCEDURE is_full();
+
+
+    
