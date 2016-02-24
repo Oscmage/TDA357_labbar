@@ -474,7 +474,7 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
 		currentReg int;
 	BEGIN
 		-- Has already passed course
-		IF exists(SELECT * FROM PassedCourses AS pc WHERE NEW.personal_number = pc.personal_number AND NEW.course_code = pc.course_code) THEN
+		IF exists(SELECT * FROM PassedCourses AS pc WHERE NEW.personal_number = pc.personal_number AND NEW.code = pc.code) THEN
 			RAISE EXCEPTION 'Student has already passed this course';
 		END IF;
 		
@@ -482,13 +482,13 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
 		IF EXISTS (
 				SELECT prerequisite as course
 				FROM is_prerequisite AS ip 
-				WHERE ip.code = NEW.course_code
+				WHERE ip.code = NEW.code
 
 				EXCEPT 
 
 				SELECT code as course 
 				FROM PassedCourses AS pc
-				WHERE NEW.personal_number = pc.personal_number AND NEW.course_code = pc.course_code
+				WHERE NEW.personal_number = pc.personal_number AND NEW.code = pc.code
 			) 
 		THEN
 			--You havn't read all prerequisite
@@ -498,30 +498,36 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
 
 		-- Student is already in waiting for this course or already registered
 		IF EXISTS 
-			(SELECT * FROM Registrations AS reg WHERE reg.code = NEW.course_code AND reg.personal_number = NEW.personal_number)
+			(SELECT * FROM Registrations AS reg WHERE reg.code = NEW.code AND reg.personal_number = NEW.personal_number)
 		THEN
 			RAISE EXCEPTION 'Student is already waiting for or registered for this course';
 		END IF;
 
+
+
 		-- Get maximum amount for the course
-		SELECT lc.maximum_amount INTO maximumAmount FROM limited_course AS lc WHERE NEW.couse_code = limited_course.code;
+		IF EXISTS(SELECT * FROM limited_course AS lc WHERE NEW.code = lc.code) THEN
+			maximumAmount := (SELECT maximum_amount FROM limited_course AS lc WHERE NEW.code = lc.code);
+		ELSE 
+			maximumAmount := NULL;
+		END IF;
 		
 		-- Get current registered for the course
-		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.course_code = reg.code AND reg.status = 'registered'; 
+		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.code = reg.code AND reg.status = 'registered'; 
 
  		-- Is course a limited course?
 		IF maximumAmount IS NOT NULL THEN
 			-- Is course full?
 			IF (currentReg >= maximumAmount) THEN 
 				-- Put student on waiting list
-				INSERT INTO waiting_for VALUES (NEW.course_code, NEW.personal_number, CURRENT_TIMESTAMP);
+				INSERT INTO waiting_for VALUES (NEW.code, NEW.personal_number, CURRENT_TIMESTAMP);
 			ELSE 
 				-- Put student is_registered_for
-				INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.course_code);
+				INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.code);
 			END IF;
 		ELSE
 			-- Put student in is_registered_for
-			INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.course_code);
+			INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.code);
 		END IF;
          END;
 $emp_stamp$ LANGUAGE plpgsql;
@@ -550,7 +556,7 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
 		/* !CHECK IF THIS IS THE SAME THING AS 'INTO'! maximumAmount = (SELECT lc.maximum_amount FROM limited_course AS lc WHERE OLD.couse_code = limited_course.code);*/
 		
 		-- Get current registered for the course
-		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.course_code = reg.code AND reg.status = 'registered'; 
+		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.code = reg.code AND reg.status = 'registered'; 
 
 		IF currectReg < maximumAmount THEN
 		
