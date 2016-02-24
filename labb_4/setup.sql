@@ -276,6 +276,8 @@ CREATE TABLE host_programs (
 	/* Three waiting students for two different limited courses.*/
 	INSERT INTO waiting_for VALUES ('TDA357','9206031111', '1992-06-03');
 	INSERT INTO waiting_for VALUES ('TDA357','9211131230', '1992-06-05');
+
+
 	
 	INSERT INTO waiting_for VALUES ('DAT205','9206031111', '1992-06-03');
 	
@@ -323,6 +325,7 @@ CREATE TABLE host_programs (
 	INSERT INTO course_completed VALUES ('9211131230','DRU102','5');
 	INSERT INTO course_completed VALUES ('9211131230','DRU103','U'); --This needs to be done (tested)
 	INSERT INTO course_completed VALUES ('9211131230','LIH199','5');
+
 
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
@@ -496,23 +499,6 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
 		END IF; 
 
 
-		-- Student is already in waiting for this course or already registered
-		IF EXISTS 
-			(SELECT * FROM Registrations AS reg WHERE reg.code = NEW.code AND reg.personal_number = NEW.personal_number)
-		THEN
-			RAISE EXCEPTION 'Student is already waiting for or registered for this course';
-		END IF;
-
-
-		
-		-- Get maximum amount for the course
-		/*
-		IF EXISTS(SELECT * FROM limited_course AS lc WHERE NEW.code = lc.code) THEN
-			maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE NEW.code = lc.code);
-		ELSE 
-			maximumAmount := NULL;
-		END IF;
-		*/
 		maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE NEW.code = lc.code);
 		
 		-- Get current registered for the course
@@ -555,7 +541,7 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
 		maximumAmount int;
 		currentReg int;
 		totWaitingStudents int;
-		firstPersNum TEXT;
+		firstPersNum TEXT;	
 		firstPersName TEXT;
 	BEGIN
 		-- Delete student from both possible table
@@ -636,6 +622,9 @@ CREATE TRIGGER unregister INSTEAD OF DELETE ON Registrations
 --INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','EDA433','waiting');
 
 --testing is waiting for  (or if full) (KLP368 max amount = 1) VERIFIED
+
+
+
 INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','KLP368','waiting');
 INSERT INTO registrations VALUES ('9206031111','Victor Olausson','KLP368','waiting');
 --SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --Victor should appear here
