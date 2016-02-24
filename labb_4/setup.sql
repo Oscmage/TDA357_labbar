@@ -628,11 +628,10 @@ CREATE TRIGGER unregister INSTEAD OF DELETE ON Registrations
 INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','KLP368','waiting');
 INSERT INTO registrations VALUES ('9206031111','Victor Olausson','KLP368','waiting');
 --SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --Victor should appear here
---INSERT INTO registrations VALUES ('9206031111','Victor Olausson','KLP368','waiting');
-
+INSERT INTO registrations VALUES ('9311131230','Lars Larsson','KLP368','waiting');
 
 --testing unregister from course when registered, and when not
-DELETE FROM registrations WHERE personal_number = '9411131230';
+DELETE FROM registrations WHERE personal_number = '9411131230' AND code = 'KLP368';
 
 --testing so that first place in waiting_for gets registered when a student unregisters
 
