@@ -544,7 +544,11 @@ CREATE TRIGGER register INSTEAD OF INSERT ON Registrations
 
 
 --Trigger two
-
+CREATE OR REPLACE VIEW StudentsFirstInQueue AS
+	SELECT cqp.code,cqp.personal_number,name 
+	FROM CourseQueuePositions AS cqp
+	JOIN students ON students.personal_number = cqp.personal_number
+	WHERE cqp.position = '1'; 
 
 CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
 	DECLARE
@@ -565,24 +569,12 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
 		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE OLD.code = reg.code AND reg.status = 'registered'; 
 
 		IF currentReg < maximumAmount THEN
-		
-			-- Take first from waiting list and register for the course
-			WITH studentFirstInQueue AS (
-				SELECT cqp.code,cqp.personal_number,name 
-				FROM CourseQueuePositions AS cqp
-				JOIN students ON students.personal_number = cqp.personal_number
-				WHERE (OLD.code = cqp.code AND cqp.position = '1') 
-			)
-
 
 				-- Count the amount of waiting students.
-			SELECT Count (*) INTO totWaitingStudents FROM studentFirstInQueue;
+			SELECT Count (*) INTO totWaitingStudents FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code;
 
-
-			IF EXISTS (studentFirstInQueue) THEN RAISE EXCEPTION 'lolboll';
-			END IF;
-			firstPersNum := (SELECT personal_number FROM studentFirstInQueue);
-			firstPersName := (SELECT name FROM studentFirstInQueue);
+			firstPersNum := (SELECT personal_number FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
+			firstPersName := (SELECT name FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
 
 		
 			
