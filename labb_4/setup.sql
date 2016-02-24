@@ -238,8 +238,8 @@ CREATE TABLE host_programs (
 
 	/*Prereqs*/
 	INSERT INTO is_prerequisite VALUES ('DRU102','DRU101');
-	INSERT INTO is_prerequisite VALUES ('DRU101','DRU102');
 	INSERT INTO is_prerequisite VALUES ('DRU103','DRU102');
+	INSERT INTO is_prerequisite VALUES ('TDA545','ANP395');
 
 	/*Course classification*/
 	INSERT INTO has_classification VALUES ('Physics','DRU101');
@@ -252,6 +252,7 @@ CREATE TABLE host_programs (
 	/*Limited course*/
 	INSERT INTO limited_course VALUES ('TDA357','1');
 	INSERT INTO limited_course VALUES ('DAT205','1');
+	INSERT INTO limited_course VALUES ('KLP368','1');
 
 	/*Students*/
 	INSERT INTO students VALUES ('9411131230','Oscar Evertsson', 'oscarev', 'Informationsteknik');
@@ -325,7 +326,6 @@ CREATE TABLE host_programs (
 
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
-	INSERT INTO is_registered_for VALUES ('9411131230', 'TDA357');
 	INSERT INTO is_registered_for VALUES ('9411131230', 'EDA433');
 	INSERT INTO is_registered_for VALUES ('9311131230', 'TDA357');
 	INSERT INTO is_registered_for VALUES ('9211131230', 'MVE045');
@@ -454,7 +454,7 @@ CREATE TABLE host_programs (
 	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number;
 	
 	CREATE VIEW CourseQueuePositions AS
-		SELECT code,since_date,ROW_NUMBER() OVER (PARTITION BY code ORDER BY since_date) AS position
+		SELECT personal_number,code,since_date,ROW_NUMBER() OVER (PARTITION BY code ORDER BY since_date) AS position
 		FROM waiting_for;
 
 	
@@ -504,13 +504,16 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
 		END IF;
 
 
-
+		
 		-- Get maximum amount for the course
+		/*
 		IF EXISTS(SELECT * FROM limited_course AS lc WHERE NEW.code = lc.code) THEN
-			maximumAmount := (SELECT maximum_amount FROM limited_course AS lc WHERE NEW.code = lc.code);
+			maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE NEW.code = lc.code);
 		ELSE 
 			maximumAmount := NULL;
 		END IF;
+		*/
+		maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE NEW.code = lc.code);
 		
 		-- Get current registered for the course
 		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.code = reg.code AND reg.status = 'registered'; 
@@ -518,7 +521,7 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
  		-- Is course a limited course?
 		IF maximumAmount IS NOT NULL THEN
 			-- Is course full?
-			IF (currentReg >= maximumAmount) THEN 
+			IF (currentReg >= maximumAmount) THEN
 				-- Put student on waiting list
 				INSERT INTO waiting_for VALUES (NEW.code, NEW.personal_number, CURRENT_TIMESTAMP);
 			ELSE 
@@ -527,8 +530,10 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
 			END IF;
 		ELSE
 			-- Put student in is_registered_for
+			RAISE EXCEPTION 'asdfghjkl';
 			INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.code);
 		END IF;
+		RETURN NEW;
          END;
 $emp_stamp$ LANGUAGE plpgsql;
 
@@ -546,37 +551,51 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
 		maximumAmount int;
 		currentReg int;
 		totWaitingStudents int;
+		firstPersNum TEXT;
+		firstPersName TEXT;
 	BEGIN
 		-- Delete student from both possible table
-		DELETE FROM is_waiting_for WHERE code = OLD.code AND personal_number = OLD.personal_number;
+		DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = OLD.personal_number;
 		DELETE FROM is_registered_for WHERE personal_number = OLD.personal_number AND course_code = OLD.code;
 
 		-- Get maximum amount for the course
-		SELECT lc.maximum_amount INTO maximumAmount FROM limited_course AS lc WHERE NEW.couse_code = limited_course.code;
-		/* !CHECK IF THIS IS THE SAME THING AS 'INTO'! maximumAmount = (SELECT lc.maximum_amount FROM limited_course AS lc WHERE OLD.couse_code = limited_course.code);*/
+		maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE OLD.code = lc.code);
 		
 		-- Get current registered for the course
-		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.code = reg.code AND reg.status = 'registered'; 
+		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE OLD.code = reg.code AND reg.status = 'registered'; 
 
-		IF currectReg < maximumAmount THEN
+		IF currentReg < maximumAmount THEN
 		
 			-- Take first from waiting list and register for the course
 			WITH studentFirstInQueue AS (
-				SELECT cqp.personal_number, cqp.code FROM CourseQueuePositions AS cqp WHERE OLD.course_code = cqp.code AND cqp.position = '1'
+				SELECT cqp.code,cqp.personal_number,name 
+				FROM CourseQueuePositions AS cqp
+				JOIN students ON students.personal_number = cqp.personal_number
+				WHERE (OLD.code = cqp.code AND cqp.position = '1') 
 			)
 
-			-- Count the amount of waiting students.
-			SELECT Count (*) INTO totWaitingStudents FROM studentFirstInqueue;
+
+				-- Count the amount of waiting students.
+			SELECT Count (*) INTO totWaitingStudents FROM studentFirstInQueue;
+
+
+			IF EXISTS (studentFirstInQueue) THEN RAISE EXCEPTION 'lolboll';
+			END IF;
+			firstPersNum := (SELECT personal_number FROM studentFirstInQueue);
+			firstPersName := (SELECT name FROM studentFirstInQueue);
+
+		
 			
-			IF totWaitingStudent > 0 THEN
+			IF totWaitingStudents > 0 THEN
 	
 				-- Delete the first student from waiting list
-				DELETE FROM is_waiting_for WHERE code = studentFirstInQueue.code AND personal_number = studentFirstInQueue.personal_number;
+				DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = OLD.personal_number;
 
 				-- Insert the old first in queue student into registrations
-				INSERT INTO Registrations VALUES (studentFirstInQueue.personal_number, studentFirstInQueue.name, studentFirstInQueue.code,'registered');
+				INSERT INTO Registrations VALUES (firstPersNum, firstPersName, OLD.code,'registered');
 			END IF;
 		END IF;
+		RETURN OLD;
          END;
 $emp_stamp$ LANGUAGE plpgsql;
 
@@ -609,4 +628,38 @@ CREATE TRIGGER unregister INSTEAD OF DELETE ON Registrations
 
 /*
 <--------------END TESTING----->
+*/
+
+/*
+<--------------	TRIGGERTESTING--------->
+*/
+
+--testing already completed course VERIFIED
+--INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','DRU101','waiting');
+
+--testing prerequisites VERIFIED
+--INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','TDA545','waiting');
+
+--testing already registered VERIFIED
+--INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','EDA433','waiting');
+
+--testing is waiting for  (or if full) (KLP368 max amount = 1) VERIFIED
+INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','KLP368','waiting');
+INSERT INTO registrations VALUES ('9206031111','Victor Olausson','KLP368','waiting');
+--SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --Victor should appear here
+--INSERT INTO registrations VALUES ('9206031111','Victor Olausson','KLP368','waiting');
+
+
+--testing unregister from course when registered, and when not
+DELETE FROM registrations WHERE personal_number = '9411131230';
+
+--testing so that first place in waiting_for gets registered when a student unregisters
+
+--SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --This table should now be empty
+
+
+--testing so that first place in waiting_for does NOT get registered if student unregisters and course is overfull
+
+/*
+<--------------END TRIGGERTESTING----->
 */
