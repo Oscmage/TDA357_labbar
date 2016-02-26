@@ -285,6 +285,7 @@ CREATE TABLE host_programs (
 	
 	INSERT INTO waiting_for VALUES ('DAT205','8811131230', '1992-06-04');
 	INSERT INTO waiting_for VALUES ('DAT205','9211131230', '1992-06-05');
+	INSERT INTO waiting_for VALUES ('KLP368', '9311131230', '1993-06-04');
 	
 	/* Oscar Evertsson is allowed to graduate. changing any value to U changes qualify */
 	INSERT INTO course_completed VALUES ('9411131230','TDA357','5');
@@ -326,13 +327,15 @@ CREATE TABLE host_programs (
 	INSERT INTO course_completed VALUES ('9211131230','DRU103','U'); --This needs to be done (tested)
 	INSERT INTO course_completed VALUES ('9211131230','LIH199','5');
 
-
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
 	INSERT INTO is_registered_for VALUES ('9411131230', 'EDA433');
 	INSERT INTO is_registered_for VALUES ('9311131230', 'TDA357');
 	INSERT INTO is_registered_for VALUES ('9211131230', 'MVE045');
 	INSERT INTO is_registered_for VALUES ('9111131230', 'DAT216');
+	INSERT INTO is_registered_for VALUES ('9411131230', 'KLP368');
+	INSERT INTO is_registered_for VALUES ('9206031111', 'KLP368');
+	
 	/*Additional Mandatory*/
 	INSERT INTO additional_mandatory VALUES ('DRU101','Software Engineering','Informationsteknik');
 	INSERT INTO additional_mandatory VALUES ('DRU102','Software Engineering','Informationsteknik');
@@ -559,15 +562,16 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
 				-- Count the amount of waiting students.
 			SELECT Count (*) INTO totWaitingStudents FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code;
 
-			firstPersNum := (SELECT personal_number FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
-			firstPersName := (SELECT name FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
-
+		
 		
 			
 			IF totWaitingStudents > 0 THEN
-	
+
+				firstPersNum := (SELECT personal_number FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
+				firstPersName := (SELECT name FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
+
 				-- Delete the first student from waiting list
-				DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = OLD.personal_number;
+				DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = firstPersNum;
 
 				-- Insert the old first in queue student into registrations
 				INSERT INTO Registrations VALUES (firstPersNum, firstPersName, OLD.code,'registered');
@@ -625,15 +629,18 @@ CREATE TRIGGER unregister INSTEAD OF DELETE ON Registrations
 
 
 
-INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','KLP368','waiting');
-INSERT INTO registrations VALUES ('9206031111','Victor Olausson','KLP368','waiting');
+--INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','KLP368','waiting');
+--INSERT INTO registrations VALUES ('9206031111','Victor Olausson','KLP368','waiting');
 --SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --Victor should appear here
-INSERT INTO registrations VALUES ('9311131230','Lars Larsson','KLP368','waiting');
+--SELECT * FROM is_registered_for AS irf WHERE irf.course_code = 'KLP368' AND irf.personal_number = '9411131230'; --Oscar should appear here
+--INSERT INTO registrations VALUES ('9311131230','Lars Larsson','KLP368','waiting');
 
---testing unregister from course when registered, and when not
-DELETE FROM registrations WHERE personal_number = '9411131230' AND code = 'KLP368';
+--testing unregister from course when registered, and when notDELETE FROM registrations WHERE personal_number = '9411131230' AND code = 'KLP368'; --Deletes Oscar. If this row is active, Oscar should not appear in registered
+SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368'; --Victor should NOT appear here
 
 --testing so that first place in waiting_for gets registered when a student unregisters
+--SELECT * FROM is_registered_for AS irf WHERE irf.course_code = 'KLP368'; --Victor should appear here
+
 
 --SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --This table should now be empty
 
