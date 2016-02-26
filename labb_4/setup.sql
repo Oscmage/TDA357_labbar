@@ -1,5 +1,4 @@
 ﻿
-
 DROP TABLE IF EXISTS
 departments,programs,branches,classification,courses,
 students,is_prerequisite,has_classification,limited_course,
@@ -460,136 +459,14 @@ CREATE TABLE host_programs (
 	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number;
 	
 	CREATE VIEW CourseQueuePositions AS
-		SELECT personal_number,code,since_date,ROW_NUMBER() OVER (PARTITION BY code ORDER BY since_date) AS position
+		SELECT personal_number, code, since_date,ROW_NUMBER() OVER (PARTITION BY code ORDER BY since_date) AS position
 		FROM waiting_for;
 
 	
 /*<------------------------------------VIEW END---------------------------------> */
 
-
-
-
-
-/*<------------------------------------Triggers--------------------------------->  */
-
-
-CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $emp_stamp$
-
-	DECLARE
-		maximumAmount int;
-		currentReg int;
-	BEGIN
-		-- Has already passed course
-		IF exists(SELECT * FROM PassedCourses AS pc WHERE NEW.personal_number = pc.personal_number AND NEW.code = pc.code) THEN
-			RAISE EXCEPTION 'Student has already passed this course';
-		END IF;
-		
-		-- Check if student hasn't read prerequisite
-		IF EXISTS (
-				SELECT prerequisite as course
-				FROM is_prerequisite AS ip 
-				WHERE ip.code = NEW.code
-
-				EXCEPT 
-
-				SELECT code as course 
-				FROM PassedCourses AS pc
-				WHERE NEW.personal_number = pc.personal_number AND NEW.code = pc.code
-			) 
-		THEN
-			--You havn't read all prerequisite
-			RAISE EXCEPTION 'Student hasnt read the prerequisite courses for this course';
-		END IF; 
-
-
-		maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE NEW.code = lc.code);
-		
-		-- Get current registered for the course
-		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.code = reg.code AND reg.status = 'registered'; 
-
- 		-- Is course a limited course?
-		IF maximumAmount IS NOT NULL THEN
-			-- Is course full?
-			IF (currentReg >= maximumAmount) THEN
-				-- Put student on waiting list
-				INSERT INTO waiting_for VALUES (NEW.code, NEW.personal_number, CURRENT_TIMESTAMP);
-			ELSE 
-				-- Put student is_registered_for
-				INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.code);
-			END IF;
-		ELSE
-			-- Put student in is_registered_for
-			RAISE EXCEPTION 'asdfghjkl';
-			INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.code);
-		END IF;
-		RETURN NEW;
-         END;
-$emp_stamp$ LANGUAGE plpgsql;
-
-
-
-CREATE TRIGGER register INSTEAD OF INSERT ON Registrations
-    FOR EACH ROW EXECUTE PROCEDURE register();
-
-
---Trigger two
-CREATE OR REPLACE VIEW StudentsFirstInQueue AS
-	SELECT cqp.code,cqp.personal_number,name 
-	FROM CourseQueuePositions AS cqp
-	JOIN students ON students.personal_number = cqp.personal_number
-	WHERE cqp.position = '1'; 
-
-CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $emp_stamp$
-	DECLARE
-		maximumAmount int;
-		currentReg int;
-		totWaitingStudents int;
-		firstPersNum TEXT;	
-		firstPersName TEXT;
-	BEGIN
-		-- Delete student from both possible table
-		DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = OLD.personal_number;
-		DELETE FROM is_registered_for WHERE personal_number = OLD.personal_number AND course_code = OLD.code;
-
-		-- Get maximum amount for the course
-		maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE OLD.code = lc.code);
-		
-		-- Get current registered for the course
-		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE OLD.code = reg.code AND reg.status = 'registered'; 
-
-		IF currentReg < maximumAmount THEN
-
-				-- Count the amount of waiting students.
-			SELECT Count (*) INTO totWaitingStudents FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code;
-
-		
-		
-			
-			IF totWaitingStudents > 0 THEN
-
-				firstPersNum := (SELECT personal_number FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
-				firstPersName := (SELECT name FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
-
-				-- Delete the first student from waiting list
-				DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = firstPersNum;
-
-				-- Insert the old first in queue student into registrations
-				INSERT INTO Registrations VALUES (firstPersNum, firstPersName, OLD.code,'registered');
-			END IF;
-		END IF;
-		RETURN OLD;
-         END;
-$emp_stamp$ LANGUAGE plpgsql;
-
-
-
-CREATE TRIGGER unregister INSTEAD OF DELETE ON Registrations
-    FOR EACH ROW EXECUTE PROCEDURE unregister();
-
-    
-
 /*
-<--------------	TESTING--------->
+<--------------	 OLD TESTING--------->
 */
 
 --SELECT * FROM StudentsFollowing;
@@ -606,47 +483,7 @@ CREATE TRIGGER unregister INSTEAD OF DELETE ON Registrations
 
 --SELECT * FROM UnreadMandatory;
 
-
-
 /*
-<--------------END TESTING----->
+<--------------END OLD TESTING----->
 */
 
-/*
-<--------------	TRIGGERTESTING--------->
-*/
-
---testing already completed course VERIFIED
---INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','DRU101','waiting');
-
---testing prerequisites VERIFIED
---INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','TDA545','waiting');
-
---testing already registered VERIFIED
---INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','EDA433','waiting');
-
---testing is waiting for  (or if full) (KLP368 max amount = 1) VERIFIED
-
-
-
---INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','KLP368','waiting');
---INSERT INTO registrations VALUES ('9206031111','Victor Olausson','KLP368','waiting');
---SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --Victor should appear here
---SELECT * FROM is_registered_for AS irf WHERE irf.course_code = 'KLP368' AND irf.personal_number = '9411131230'; --Oscar should appear here
---INSERT INTO registrations VALUES ('9311131230','Lars Larsson','KLP368','waiting');
-
---testing unregister from course when registered, and when notDELETE FROM registrations WHERE personal_number = '9411131230' AND code = 'KLP368'; --Deletes Oscar. If this row is active, Oscar should not appear in registered
-SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368'; --Victor should NOT appear here
-
---testing so that first place in waiting_for gets registered when a student unregisters
---SELECT * FROM is_registered_for AS irf WHERE irf.course_code = 'KLP368'; --Victor should appear here
-
-
---SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --This table should now be empty
-
-
---testing so that first place in waiting_for does NOT get registered if student unregisters and course is overfull
-
-/*
-<--------------END TRIGGERTESTING----->
-*/
