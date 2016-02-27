@@ -1,3 +1,7 @@
+﻿
+DROP TRIGGER IF EXISTS register ON Registrations CASCADE;
+DROP TRIGGER IF EXISTS unregister ON Registrations CASCADE;
+
 
 CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $$
 
@@ -29,6 +33,11 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $$
 
 
 		maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE NEW.code = lc.code);
+
+		-- Make sure we're not already waiting for or registered for the course.
+		IF EXISTS (SELECT * FROM registrations AS reg WHERE NEW.code = reg.code AND reg.personal_number = NEW.personal_number) THEN
+			RAISE EXCEPTION 'Student already registered or in waiting queue';
+		END IF;
 		
 		-- Get current registered for the course
 		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE NEW.code = reg.code AND reg.status = 'registered'; 
