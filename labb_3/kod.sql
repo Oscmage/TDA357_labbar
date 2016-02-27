@@ -438,14 +438,21 @@ CREATE TABLE host_programs (
 		completed_courses AS
 			(SELECT personal_number, SUM(credit) AS total_credits
 			FROM PassedCourses
+			GROUP BY (personal_number)),
+		credits_in_recommended AS
+			(SELECT personal_number, SUM(PC.credit) AS total_credits_rec
+			FROM is_recommended AS isr
+			INNER JOIN PassedCourses AS PC ON isr.course_code = PC.code
 			GROUP BY (personal_number))
 	SELECT s.personal_number,s.name,s.program_name,credits_in_seminar_courses.nbr_seminar_courses,
-	credits_in_research.credits_in_research,credits_in_math.credits_in_math,unread_mandatory.mandatory_left,completed_courses.total_credits,
+	credits_in_research.credits_in_research,credits_in_math.credits_in_math,
+	unread_mandatory.mandatory_left,completed_courses.total_credits,
 	CASE 
 		WHEN( 
 			credits_in_math >= 20 AND
 			credits_in_research >= 10 AND
 			nbr_seminar_courses >= 1 AND 
+			total_credits_rec >= 10 AND
 			mandatory_left IS NULL
 		) 
 		THEN 'Yes'
@@ -456,8 +463,31 @@ CREATE TABLE host_programs (
 	LEFT JOIN credits_in_math ON s.personal_number = credits_in_math.personal_number
 	LEFT JOIN credits_in_research ON s.personal_number =  credits_in_research.personal_number
 	LEFT JOIN credits_in_seminar_courses ON s.personal_number =  credits_in_seminar_courses.personal_number
-	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number;
+	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number
+	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number;
 
-	SELECT * FROM PathToGraduation;
-
+	
 /*<------------------------------------VIEW END---------------------------------> */
+
+/*
+<--------------	 OLD TESTING--------->
+*/
+
+--SELECT * FROM StudentsFollowing;
+
+--SELECT * FROM FinishedCourses;
+
+--SELECT * FROM Registrations;
+
+--SELECT * FROM PassedCourses;
+
+--SELECT * FROM PathToGraduation;
+
+--SELECT * FROM CourseQueuePositions;
+
+--SELECT * FROM UnreadMandatory;
+
+/*
+<--------------END OLD TESTING----->
+*/
+
