@@ -1,33 +1,27 @@
-CREATE VIEW StudentsFollowing AS
+
+/*<------------------------------------VIEW START--------------------------------->*/
+
+	CREATE VIEW StudentsFollowing AS
 		SELECT  students.personal_number,name,student_id,students.program_name,branch_name
 		FROM students
 		LEFT JOIN belongs_to
 		ON students.personal_number=belongs_to.personal_number;
-	/*
-	SELECT * FROM StudentsFollowing;
-	*/
 	
 	CREATE VIEW FinishedCourses AS
 		SELECT students.personal_number,courses.code,courses.name,courses.credit,course_completed.grade
 		FROM students,courses,course_completed
 		WHERE students.personal_number = course_completed.personal_number AND courses.code = course_completed.course_code;
-		
-	/*
-	SELECT * FROM FinishedCourses;
-	*/
 
 	CREATE VIEW Registrations AS
-		(SELECT students.personal_number,students.name,courses.code,'waiting' AS status
-		FROM students,courses,waiting_for
-		WHERE students.personal_number = waiting_for.personal_number AND courses.code = waiting_for.code)
+			(SELECT students.personal_number,courses.code,'waiting' AS status
+			FROM students,courses,waiting_for
+			WHERE students.personal_number = waiting_for.personal_number AND courses.code = waiting_for.code)
 		UNION
-		(SELECT students.personal_number,students.name,courses.code,'registered' AS status
-		FROM students,courses,is_registered_for
-		WHERE students.personal_number = is_registered_for.personal_number AND courses.code = is_registered_for.course_code
-		ORDER BY name,status);
-	/*
-	SELECT * FROM Registrations;
-	*/
+			(SELECT students.personal_number, courses.code,'registered' AS status
+			FROM students,courses,is_registered_for
+			WHERE students.personal_number = is_registered_for.personal_number AND courses.code = is_registered_for.course_code
+			ORDER BY status);
+
 
 	CREATE VIEW PassedCourses AS
 		SELECT students.personal_number,students.name,courses.code,courses.name AS course_name,courses.credit,course_completed.grade
@@ -36,9 +30,6 @@ CREATE VIEW StudentsFollowing AS
 			courses.code = course_completed.course_code
 			AND course_completed.grade <> 'U';
 
-	/*
-	SELECT * FROM PassedCourses
-	*/
 		
 	CREATE VIEW UnreadMandatory AS
 		--First retrieves all mandatory courses for a program but then also for branches. After that removes all courses that a student already completed (Where statement).
@@ -69,9 +60,6 @@ CREATE VIEW StudentsFollowing AS
 						AND grade <> 'U'
 					)
 		);
-	/*
-	SELECT * FROM UnreadMandatory;
-	*/
 
 	CREATE VIEW PathToGraduation AS
 	  WITH credits_in_seminar_courses AS 
@@ -102,14 +90,21 @@ CREATE VIEW StudentsFollowing AS
 		completed_courses AS
 			(SELECT personal_number, SUM(credit) AS total_credits
 			FROM PassedCourses
+			GROUP BY (personal_number)),
+		credits_in_recommended AS
+			(SELECT personal_number, SUM(PC.credit) AS total_credits_rec
+			FROM is_recommended AS isr
+			INNER JOIN PassedCourses AS PC ON isr.course_code = PC.code
 			GROUP BY (personal_number))
 	SELECT s.personal_number,s.name,s.program_name,credits_in_seminar_courses.nbr_seminar_courses,
-	credits_in_research.credits_in_research,credits_in_math.credits_in_math,unread_mandatory.mandatory_left,completed_courses.total_credits,
+	credits_in_research.credits_in_research,credits_in_math.credits_in_math,
+	unread_mandatory.mandatory_left,completed_courses.total_credits,
 	CASE 
 		WHEN( 
 			credits_in_math >= 20 AND
 			credits_in_research >= 10 AND
 			nbr_seminar_courses >= 1 AND 
+			total_credits_rec >= 10 AND
 			mandatory_left IS NULL
 		) 
 		THEN 'Yes'
@@ -120,6 +115,5 @@ CREATE VIEW StudentsFollowing AS
 	LEFT JOIN credits_in_math ON s.personal_number = credits_in_math.personal_number
 	LEFT JOIN credits_in_research ON s.personal_number =  credits_in_research.personal_number
 	LEFT JOIN credits_in_seminar_courses ON s.personal_number =  credits_in_seminar_courses.personal_number
-	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number;
-
---	SELECT * FROM PathToGraduation;
+	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number
+	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number;

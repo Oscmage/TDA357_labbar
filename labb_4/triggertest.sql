@@ -16,23 +16,23 @@
 
 
 --testing already completed course VERIFIED
---INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','DRU101','waiting');
+--INSERT INTO registrations VALUES ('9411131230','DRU101','waiting');
 
 --testing prerequisites VERIFIED
---INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','TDA545','waiting');
+--INSERT INTO registrations VALUES ('9411131230','TDA545','waiting');
 
 --testing already registered VERIFIED
---INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','EDA433','waiting');
+--INSERT INTO registrations VALUES ('9411131230','EDA433','waiting');
 
 --testing is waiting for  (or if full) (KLP368 max amount = 1) VERIFIED
 
 
 
---INSERT INTO registrations VALUES ('9411131230','Oscar Evertsson','KLP368','waiting');
---INSERT INTO registrations VALUES ('9206031111','Victor Olausson','KLP368','waiting');
+--INSERT INTO registrations VALUES ('9411131230','KLP368','waiting');
+--INSERT INTO registrations VALUES ('9206031111','KLP368','waiting');
 --SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --Victor should appear here
 --SELECT * FROM is_registered_for AS irf WHERE irf.course_code = 'KLP368' AND irf.personal_number = '9411131230'; --Oscar should appear here
---INSERT INTO registrations VALUES ('9311131230','Lars Larsson','KLP368','waiting');
+--INSERT INTO registrations VALUES ('9311131230','KLP368','waiting');
 
 --testing unregister from course when registered, and when notDELETE FROM registrations WHERE personal_number = '9411131230' AND code = 'KLP368'; --Deletes Oscar. If this row is active, Oscar should not appear in registered
 --SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368'; --Victor should NOT appear here

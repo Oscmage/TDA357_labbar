@@ -361,14 +361,14 @@ CREATE TABLE host_programs (
 		WHERE students.personal_number = course_completed.personal_number AND courses.code = course_completed.course_code;
 
 	CREATE VIEW Registrations AS
-			(SELECT students.personal_number,students.name,courses.code,'waiting' AS status
+			(SELECT students.personal_number,courses.code,'waiting' AS status
 			FROM students,courses,waiting_for
 			WHERE students.personal_number = waiting_for.personal_number AND courses.code = waiting_for.code)
 		UNION
-			(SELECT students.personal_number,students.name,courses.code,'registered' AS status
+			(SELECT students.personal_number, courses.code,'registered' AS status
 			FROM students,courses,is_registered_for
 			WHERE students.personal_number = is_registered_for.personal_number AND courses.code = is_registered_for.course_code
-			ORDER BY name,status);
+			ORDER BY status);
 
 
 	CREATE VIEW PassedCourses AS
@@ -438,14 +438,21 @@ CREATE TABLE host_programs (
 		completed_courses AS
 			(SELECT personal_number, SUM(credit) AS total_credits
 			FROM PassedCourses
+			GROUP BY (personal_number)),
+		credits_in_recommended AS
+			(SELECT personal_number, SUM(PC.credit) AS total_credits_rec
+			FROM is_recommended AS isr
+			INNER JOIN PassedCourses AS PC ON isr.course_code = PC.code
 			GROUP BY (personal_number))
 	SELECT s.personal_number,s.name,s.program_name,credits_in_seminar_courses.nbr_seminar_courses,
-	credits_in_research.credits_in_research,credits_in_math.credits_in_math,unread_mandatory.mandatory_left,completed_courses.total_credits,
+	credits_in_research.credits_in_research,credits_in_math.credits_in_math,
+	unread_mandatory.mandatory_left,completed_courses.total_credits,
 	CASE 
 		WHEN( 
 			credits_in_math >= 20 AND
 			credits_in_research >= 10 AND
 			nbr_seminar_courses >= 1 AND 
+			total_credits_rec >= 10 AND
 			mandatory_left IS NULL
 		) 
 		THEN 'Yes'
@@ -456,7 +463,8 @@ CREATE TABLE host_programs (
 	LEFT JOIN credits_in_math ON s.personal_number = credits_in_math.personal_number
 	LEFT JOIN credits_in_research ON s.personal_number =  credits_in_research.personal_number
 	LEFT JOIN credits_in_seminar_courses ON s.personal_number =  credits_in_seminar_courses.personal_number
-	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number;
+	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number
+	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number;
 	
 	CREATE VIEW CourseQueuePositions AS
 		SELECT personal_number, code, since_date,ROW_NUMBER() OVER (PARTITION BY code ORDER BY since_date) AS position
