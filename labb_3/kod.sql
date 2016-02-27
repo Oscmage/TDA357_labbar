@@ -1,8 +1,4 @@
 ﻿
-DROP VIEW IF EXISTS
-StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
-UnreadMandatory,PathToGraduation, Test;
-
 DROP TABLE IF EXISTS
 departments,programs,branches,classification,courses,
 students,is_prerequisite,has_classification,limited_course,
@@ -10,7 +6,11 @@ waiting_for,course_completed,is_registered_for,
 additional_mandatory,belongs_to,
 is_recommended,
 is_mandatory,
-host_programs;
+host_programs CASCADE;
+
+DROP VIEW IF EXISTS
+StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
+UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_limited_course CASCADE;
 
 /*<----------------------------TABLE START--------------------------->*/
 CREATE TABLE departments (
@@ -237,8 +237,8 @@ CREATE TABLE host_programs (
 
 	/*Prereqs*/
 	INSERT INTO is_prerequisite VALUES ('DRU102','DRU101');
-	INSERT INTO is_prerequisite VALUES ('DRU101','DRU102');
 	INSERT INTO is_prerequisite VALUES ('DRU103','DRU102');
+	INSERT INTO is_prerequisite VALUES ('TDA545','ANP395');
 
 	/*Course classification*/
 	INSERT INTO has_classification VALUES ('Physics','DRU101');
@@ -251,6 +251,7 @@ CREATE TABLE host_programs (
 	/*Limited course*/
 	INSERT INTO limited_course VALUES ('TDA357','1');
 	INSERT INTO limited_course VALUES ('DAT205','1');
+	INSERT INTO limited_course VALUES ('KLP368','1');
 
 	/*Students*/
 	INSERT INTO students VALUES ('9411131230','Oscar Evertsson', 'oscarev', 'Informationsteknik');
@@ -274,6 +275,8 @@ CREATE TABLE host_programs (
 	/* Three waiting students for two different limited courses.*/
 	INSERT INTO waiting_for VALUES ('TDA357','9206031111', '1992-06-03');
 	INSERT INTO waiting_for VALUES ('TDA357','9211131230', '1992-06-05');
+
+
 	
 	INSERT INTO waiting_for VALUES ('DAT205','9206031111', '1992-06-03');
 	
@@ -281,6 +284,7 @@ CREATE TABLE host_programs (
 	
 	INSERT INTO waiting_for VALUES ('DAT205','8811131230', '1992-06-04');
 	INSERT INTO waiting_for VALUES ('DAT205','9211131230', '1992-06-05');
+	INSERT INTO waiting_for VALUES ('KLP368', '9311131230', '1993-06-04');
 	
 	/* Oscar Evertsson is allowed to graduate. changing any value to U changes qualify */
 	INSERT INTO course_completed VALUES ('9411131230','TDA357','5');
@@ -324,11 +328,13 @@ CREATE TABLE host_programs (
 
 	/*Registered for*/
 	INSERT INTO is_registered_for VALUES ('9206031111', 'DRU102');
-	INSERT INTO is_registered_for VALUES ('9411131230', 'TDA357');
 	INSERT INTO is_registered_for VALUES ('9411131230', 'EDA433');
 	INSERT INTO is_registered_for VALUES ('9311131230', 'TDA357');
 	INSERT INTO is_registered_for VALUES ('9211131230', 'MVE045');
 	INSERT INTO is_registered_for VALUES ('9111131230', 'DAT216');
+	INSERT INTO is_registered_for VALUES ('9411131230', 'KLP368');
+	INSERT INTO is_registered_for VALUES ('9206031111', 'KLP368');
+	
 	/*Additional Mandatory*/
 	INSERT INTO additional_mandatory VALUES ('DRU101','Software Engineering','Informationsteknik');
 	INSERT INTO additional_mandatory VALUES ('DRU102','Software Engineering','Informationsteknik');
@@ -348,31 +354,22 @@ CREATE TABLE host_programs (
 		FROM students
 		LEFT JOIN belongs_to
 		ON students.personal_number=belongs_to.personal_number;
-	/*
-	SELECT * FROM StudentsFollowing;
-	*/
 	
 	CREATE VIEW FinishedCourses AS
 		SELECT students.personal_number,courses.code,courses.name,courses.credit,course_completed.grade
 		FROM students,courses,course_completed
 		WHERE students.personal_number = course_completed.personal_number AND courses.code = course_completed.course_code;
-		
-	/*
-	SELECT * FROM FinishedCourses;
-	*/
 
 	CREATE VIEW Registrations AS
-		(SELECT students.personal_number,students.name,courses.code,'waiting' AS status
-		FROM students,courses,waiting_for
-		WHERE students.personal_number = waiting_for.personal_number AND courses.code = waiting_for.code)
+			(SELECT students.personal_number,courses.code,'waiting' AS status
+			FROM students,courses,waiting_for
+			WHERE students.personal_number = waiting_for.personal_number AND courses.code = waiting_for.code)
 		UNION
-		(SELECT students.personal_number,students.name,courses.code,'registered' AS status
-		FROM students,courses,is_registered_for
-		WHERE students.personal_number = is_registered_for.personal_number AND courses.code = is_registered_for.course_code
-		ORDER BY name,status);
-	/*
-	SELECT * FROM Registrations;
-	*/
+			(SELECT students.personal_number, courses.code,'registered' AS status
+			FROM students,courses,is_registered_for
+			WHERE students.personal_number = is_registered_for.personal_number AND courses.code = is_registered_for.course_code
+			ORDER BY status);
+
 
 	CREATE VIEW PassedCourses AS
 		SELECT students.personal_number,students.name,courses.code,courses.name AS course_name,courses.credit,course_completed.grade
@@ -381,9 +378,6 @@ CREATE TABLE host_programs (
 			courses.code = course_completed.course_code
 			AND course_completed.grade <> 'U';
 
-	/*
-	SELECT * FROM PassedCourses
-	*/
 		
 	CREATE VIEW UnreadMandatory AS
 		--First retrieves all mandatory courses for a program but then also for branches. After that removes all courses that a student already completed (Where statement).
@@ -414,9 +408,6 @@ CREATE TABLE host_programs (
 						AND grade <> 'U'
 					)
 		);
-	/*
-	SELECT * FROM UnreadMandatory;
-	*/
 
 	CREATE VIEW PathToGraduation AS
 	  WITH credits_in_seminar_courses AS 
