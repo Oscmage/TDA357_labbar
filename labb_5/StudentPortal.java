@@ -168,30 +168,14 @@ public class StudentPortal
     static void registerStudent(Connection conn, String student, String course) throws SQLException {
         Statement statement = conn.createStatement();
 
-        String studentName = getStudentName(statement, student);
-
-        //TODO CHANGE IN THE SQL CODE WE SHOULD NOT NEED THE STUDENT NAME
-
-        if (studentName != null) {
+        if (student != null && course != null) {
             String insertStatement =
-                    "INSERT INTO Registrations VALUES ("
-                    + student + ", " + studentName +  ", " + course + ");";
-            statement.execute(insertStatement);
+                    "INSERT INTO registrations VALUES ("
+                    + student + ", " + course + ");";
+            statement.executeUpdate(insertStatement);
         } else {
-            throw new NullPointerException("Could not register student");
+            throw new NullPointerException("You can't register if the student or course is null");
         }
-    }
-
-    //TODO CHANGE IN THE SQL CODE WE SHOULD NOT NEED THE STUDENT NAME
-    private static String getStudentName(Statement statement,String student) {
-        String query = "SELECT name FROM students WHERE " + student + "=personal_number;";
-        try {
-            ResultSet result = statement.executeQuery(query);
-            return result.getString("name");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     /* Unregister: Given a student id number and a course code, this function
@@ -200,8 +184,8 @@ public class StudentPortal
     static void unregisterStudent(Connection conn, String student, String course) throws SQLException {
         Statement statement = conn.createStatement();
 
-        String insertStatement =
-                "DELETE FROM Registrations WHERE " + student + "=personal_number AND " + course +"=code;";
-        statement.execute(insertStatement);
+        String query =
+                "DELETE FROM registrations WHERE " + student + "=personal_number AND " + course +"=code;";
+        statement.executeUpdate(query);
     }
 }
