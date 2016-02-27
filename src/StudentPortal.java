@@ -30,9 +30,8 @@ public class StudentPortal
 
     /* main: parses the input commands.
      * /!\ You don't need to change this function! */
-    public static void main(String[] args) throws Exception {
-
-
+    public static void main(String[] args) throws Exception
+    {
         try {
             Class.forName("org.postgresql.Driver");
             String url = "jdbc:postgresql://ate.ita.chalmers.se/";
@@ -85,8 +84,13 @@ public class StudentPortal
 
         student = student.trim(); //Make sure there is no blank space.
 
-        //Get student info
-        printStudentInfo(statement,student);
+        //Get the name, national identification number, program, branch
+        String query =
+                "SELECT S.name, S.personal_number, SF.program_name, SF.branch_name FROM students AS S" +
+                "INNER JOIN StudentsFollowing AS SF" +
+                "WHERE student_id=" + student;
+
+        ResultSet result = statement.executeQuery(query);
 
         //Get finished courses
         printFinishedCourses(statement, student);
@@ -101,31 +105,14 @@ public class StudentPortal
         printFulfillsForGrad(statement, student);
     }
 
-    private static void printStudentInfo(Statement statement, String student) throws SQLException {
-        //Get the name, national identification number, program, branch
-        String query =
-                "SELECT name, personal_number, program_name, branch_name FROM StudentsFollowing  " +
-                        "WHERE personal_number='" + student + "'";
-
-        ResultSet result = statement.executeQuery(query);
-        result.next();
-
-        String personalNumber = result.getString("personal_number");
-        String name = result.getString("name");
-        String program = result.getString("program_name");
-        String branch = result.getString("branch_name");
-
-        System.out.println(name + ", " + personalNumber + ", " + program + ", " + branch);
-    }
-
     private static void printMandatoryLeft(Statement statement, String student) {
         System.out.println("<--------START Mandatory left courses---------->");
 
-        String query = "SELECT mandatory FROM UnreadMandatory WHERE personal_number='" + student + "'";
+        String query = "SELECT course_code FROM UnreadMandatory WHERE student_id=" + student;
         try {
             ResultSet result = statement.executeQuery(query);
             while (result.next()) {
-                System.out.println("Code:" + result.getString("mandatory"));
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -134,10 +121,9 @@ public class StudentPortal
     }
 
     private static void printFulfillsForGrad(Statement statement, String student) {
-        String query = "SELECT qualified_for_graduation FROM PathToGraduation " +  "WHERE personal_number='" + student + "'";
+        String query = "SELECT qualified_for_graduation FROM PathToGraduation " +  "WHERE student_id=" + student;
         try {
             ResultSet result = statement.executeQuery(query);
-            result.next();
             System.out.println("Student fullfills graduation requirements: " + result.getString("qualified_for_graduation"));
         } catch (SQLException e) {
             e.printStackTrace();
@@ -146,11 +132,11 @@ public class StudentPortal
 
     private static void printRegisteredTo(Statement statement, String student) {
         System.out.println("<--------START Registered courses---------->");
-        String query = "SELECT course_code FROM is_registered_for WHERE personal_number='" + student + "'";
+        String query = "SELECT course_code FROM is_registered_for WHERE personal_number=" + student;
         try {
             ResultSet result = statement.executeQuery(query);
             while (result.next()) {
-                System.out.println("Code: " + result.getString("course_code"));
+                System.out.println("Code: " + result.getString("code"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -162,7 +148,7 @@ public class StudentPortal
     private static void printFinishedCourses(Statement statement, String student) {
         System.out.println("<--------START Finished courses---------->");
 
-        String query = "SELECT code, grade FROM FinishedCourses WHERE personal_number='" + student + "'";
+        String query = "SELECT code, grade FROM FinishedCourses WHERE personal_number=" + student;
         ResultSet result = null;
 
         try {
@@ -184,8 +170,8 @@ public class StudentPortal
 
         if (student != null && course != null) {
             String insertStatement =
-                    "INSERT INTO registrations VALUES ('"
-                    + student + "', '" + course + "');";
+                    "INSERT INTO registrations VALUES ("
+                    + student + ", " + course + ");";
             statement.executeUpdate(insertStatement);
         } else {
             throw new NullPointerException("You can't register if the student or course is null");
@@ -199,7 +185,7 @@ public class StudentPortal
         Statement statement = conn.createStatement();
 
         String query =
-                "DELETE FROM registrations WHERE '" + student + "'=personal_number AND '" + course +"'=code;";
+                "DELETE FROM registrations WHERE " + student + "=personal_number AND " + course +"=code;";
         statement.executeUpdate(query);
     }
 }
