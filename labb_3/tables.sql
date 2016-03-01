@@ -56,7 +56,9 @@ CREATE TABLE students (
 CREATE TABLE is_prerequisite (
 	code TEXT,
 	prerequisite TEXT,
-	PRIMARY KEY (code,prerequisite)
+	FOREIGN KEY (code) REFERENCES courses (code) ON DELETE CASCADE,
+	FOREIGN KEY (prerequisite) REFERENCES courses (code) ON DELETE CASCADE,
+	PRIMARY KEY (code,prerequisite)	
 );
 
 CREATE TABLE has_classification (

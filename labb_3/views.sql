@@ -99,19 +99,19 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 			INNER JOIN PassedCourses AS PC ON isr.course_code = PC.code
 			GROUP BY (personal_number)),
 		belongs_to_branch AS
-			(SELECT personal_number, COUNT(branch_name) AS bn
+			(SELECT personal_number, COUNT(branch_name) AS belongs_to_branch
 			FROM StudentsFollowing
 			GROUP BY (personal_number))
 	SELECT s.personal_number,s.name,s.program_name,credits_in_seminar_courses.nbr_seminar_courses,
 	unread_mandatory.mandatory_left, completed_courses.total_credits,
-	credits_in_research.credits_in_research, belongs_to_branch.bn, credits_in_math.credits_in_math,
+	credits_in_research.credits_in_research, belongs_to_branch.belongs_to_branch, credits_in_math.credits_in_math,
 	CASE 
 		WHEN( 
 			credits_in_math >= 20 AND
 			credits_in_research >= 10 AND
 			nbr_seminar_courses >= 1 AND 
 			total_credits_rec >= 10 AND
-			bn >= 1 AND
+			belongs_to_branch >= 1 AND
 			mandatory_left IS NULL
 		) 
 		THEN 'Yes'
