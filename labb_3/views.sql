@@ -1,3 +1,7 @@
+DROP VIEW IF EXISTS
+StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
+UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_limited_course CASCADE;
+
 
 /*<------------------------------------VIEW START--------------------------------->*/
 

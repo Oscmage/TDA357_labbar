@@ -1,4 +1,4 @@
-CREATE TABLE departments (
+﻿CREATE TABLE departments (
 	abbreviation TEXT,
 	name TEXT NOT NULL UNIQUE,
 	PRIMARY KEY (abbreviation)
@@ -47,7 +47,7 @@ CREATE TABLE students (
 CREATE TABLE is_prerequisite (
 	code TEXT,
 	prerequisite TEXT,
-	PRIMARY KEY (code,prerequisite),
+	PRIMARY KEY (code,prerequisite)
 );
 
 CREATE TABLE has_classification (
@@ -71,7 +71,7 @@ CREATE TABLE waiting_for (
 	since_date TIMESTAMP NOT NULL,
 	unique (code, since_date),
 	PRIMARY KEY (code,personal_number),
-	FOREIGN KEY (code) REFERENCES courses (code) ON DELETE CASCADE,
+	FOREIGN KEY (code) REFERENCES limited_course (code) ON DELETE CASCADE,
 	FOREIGN KEY (personal_number) REFERENCES students (personal_number) ON DELETE CASCADE
 );
 
