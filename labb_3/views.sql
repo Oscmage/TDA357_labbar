@@ -14,7 +14,7 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 	CREATE VIEW FinishedCourses AS
 		SELECT students.personal_number,courses.code,courses.name,courses.credit,course_completed.grade
 		FROM students 
-		INNER JOIN course_completed ON course_completed.personal_number = students.personal_number
+		NATURAL JOIN course_completed
 		INNER JOIN courses ON courses.code = course_completed.course_code;
 	
 	
@@ -125,5 +125,3 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number
 	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number
 	LEFT JOIN belongs_to_branch ON s.personal_number = belongs_to_branch.personal_number;
-
-	SELECT * FROM FinishedCourses;
