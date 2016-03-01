@@ -1,9 +1,10 @@
-DROP VIEW IF EXISTS
+﻿DROP VIEW IF EXISTS
 StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
 UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_limited_course CASCADE;
 
 
 /*<------------------------------------VIEW START--------------------------------->*/
+
 
 	CREATE VIEW StudentsFollowing AS
 		SELECT  students.personal_number,name,student_id,students.program_name,branch_name
@@ -28,11 +29,9 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 
 
 	CREATE VIEW PassedCourses AS
-		SELECT students.personal_number,students.name,courses.code,courses.name AS course_name,courses.credit,course_completed.grade
-		FROM students,courses,course_completed
-		WHERE students.personal_number = course_completed.personal_number AND
-			courses.code = course_completed.course_code
-			AND course_completed.grade <> 'U';
+		SELECT *
+		FROM FinishedCourses
+		WHERE grade <> 'U';
 
 		
 	CREATE VIEW UnreadMandatory AS
@@ -121,3 +120,4 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 	LEFT JOIN credits_in_seminar_courses ON s.personal_number =  credits_in_seminar_courses.personal_number
 	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number
 	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number;
+	
