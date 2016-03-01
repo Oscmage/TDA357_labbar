@@ -105,15 +105,15 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 			FROM StudentsFollowing
 			GROUP BY (personal_number))
 	SELECT s.personal_number,s.name,s.program_name,credits_in_seminar_courses.nbr_seminar_courses,
-	credits_in_research.credits_in_research,credits_in_math.credits_in_math,
-	unread_mandatory.mandatory_left,completed_courses.total_credits,
+	unread_mandatory.mandatory_left, completed_courses.total_credits,
+	credits_in_research.credits_in_research, belongs_to_branch.bn, credits_in_math.credits_in_math,
 	CASE 
 		WHEN( 
 			credits_in_math >= 20 AND
 			credits_in_research >= 10 AND
 			nbr_seminar_courses >= 1 AND 
 			total_credits_rec >= 10 AND
-			belongs_to_branch IS NOT NULL AND
+			bn >= 1 AND
 			mandatory_left IS NULL
 		) 
 		THEN 'Yes'
@@ -127,5 +127,3 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number
 	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number
 	LEFT JOIN belongs_to_branch ON s.personal_number = belongs_to_branch.personal_number;
-
-SELECT * FROM PathToGraduation;
