@@ -28,11 +28,9 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 
 
 	CREATE VIEW PassedCourses AS
-		SELECT students.personal_number,students.name,courses.code,courses.name AS course_name,courses.credit,course_completed.grade
-		FROM students,courses,course_completed
-		WHERE students.personal_number = course_completed.personal_number AND
-			courses.code = course_completed.course_code
-			AND course_completed.grade <> 'U';
+		SELECT *
+		FROM FinishedCourses
+		WHERE grade <> 'U';
 
 		
 	CREATE VIEW UnreadMandatory AS
@@ -57,11 +55,10 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 			)
 		) AS resultTable WHERE NOT EXISTS (
 					--Get courses which student has passed
-					SELECT course_completed.personal_number
-					FROM course_completed
-					WHERE (course_completed.personal_number = resultTable.personal_number 
-						AND resultTable.mandatory = course_completed.course_code
-						AND grade <> 'U'
+					SELECT *
+					FROM PassedCourses AS PS
+					WHERE (resultTable.personal_number = PS.personal_number 
+						AND resultTable.mandatory = PS.code)
 					)
 		);
 
