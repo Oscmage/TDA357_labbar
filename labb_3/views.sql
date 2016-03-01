@@ -5,7 +5,6 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 
 /*<------------------------------------VIEW START--------------------------------->*/
 
-
 	CREATE VIEW StudentsFollowing AS
 		SELECT  students.personal_number,name,student_id,students.program_name,branch_name
 		FROM students
@@ -29,9 +28,11 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 
 
 	CREATE VIEW PassedCourses AS
-		SELECT *
-		FROM FinishedCourses
-		WHERE grade <> 'U';
+		SELECT students.personal_number,students.name,courses.code,courses.name AS course_name,courses.credit,course_completed.grade
+		FROM students,courses,course_completed
+		WHERE students.personal_number = course_completed.personal_number AND
+			courses.code = course_completed.course_code
+			AND course_completed.grade <> 'U';
 
 		
 	CREATE VIEW UnreadMandatory AS
@@ -56,10 +57,12 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 			)
 		) AS resultTable WHERE NOT EXISTS (
 					--Get courses which student has passed
-					SELECT * 
-					FROM PassedCourses AS PS
-					WHERE (resultTable.personal_number = PS.personal_number AND
-						resultTable.mandatory = PS.code)
+					SELECT course_completed.personal_number
+					FROM course_completed
+					WHERE (course_completed.personal_number = resultTable.personal_number 
+						AND resultTable.mandatory = course_completed.course_code
+						AND grade <> 'U'
+					)
 		);
 
 	CREATE VIEW PathToGraduation AS
@@ -96,6 +99,10 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 			(SELECT personal_number, SUM(PC.credit) AS total_credits_rec
 			FROM is_recommended AS isr
 			INNER JOIN PassedCourses AS PC ON isr.course_code = PC.code
+			GROUP BY (personal_number)),
+		belongs_to_branch AS
+			(SELECT personal_number, COUNT(branch_name) AS bn
+			FROM StudentsFollowing
 			GROUP BY (personal_number))
 	SELECT s.personal_number,s.name,s.program_name,credits_in_seminar_courses.nbr_seminar_courses,
 	credits_in_research.credits_in_research,credits_in_math.credits_in_math,
@@ -106,6 +113,7 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 			credits_in_research >= 10 AND
 			nbr_seminar_courses >= 1 AND 
 			total_credits_rec >= 10 AND
+			belongs_to_branch IS NOT NULL AND
 			mandatory_left IS NULL
 		) 
 		THEN 'Yes'
@@ -117,6 +125,7 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 	LEFT JOIN credits_in_research ON s.personal_number =  credits_in_research.personal_number
 	LEFT JOIN credits_in_seminar_courses ON s.personal_number =  credits_in_seminar_courses.personal_number
 	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number
-	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number;
-	
-	SELECT * FROM UnreadMandatory;
+	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number
+	LEFT JOIN belongs_to_branch ON s.personal_number = belongs_to_branch.personal_number;
+
+SELECT * FROM PathToGraduation;
