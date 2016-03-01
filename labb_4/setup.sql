@@ -13,6 +13,7 @@ StudentsFollowing,FinishedCourses,Registrations,PassedCourses,
 UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_limited_course CASCADE;
 
 /*<----------------------------TABLE START--------------------------->*/
+
 CREATE TABLE departments (
 	abbreviation TEXT,
 	name TEXT NOT NULL UNIQUE,
@@ -88,7 +89,7 @@ CREATE TABLE waiting_for (
 	since_date TIMESTAMP NOT NULL,
 	unique (code, since_date),
 	PRIMARY KEY (code,personal_number),
-	FOREIGN KEY (code) REFERENCES courses (code) ON DELETE CASCADE,
+	FOREIGN KEY (code) REFERENCES limited_course (code) ON DELETE CASCADE,
 	FOREIGN KEY (personal_number) REFERENCES students (personal_number) ON DELETE CASCADE
 );
 
@@ -349,6 +350,7 @@ CREATE TABLE host_programs (
 
 /*<------------------------------------VIEW START--------------------------------->*/
 
+	
 	CREATE VIEW StudentsFollowing AS
 		SELECT  students.personal_number,name,student_id,students.program_name,branch_name
 		FROM students
@@ -357,9 +359,11 @@ CREATE TABLE host_programs (
 	
 	CREATE VIEW FinishedCourses AS
 		SELECT students.personal_number,courses.code,courses.name,courses.credit,course_completed.grade
-		FROM students,courses,course_completed
-		WHERE students.personal_number = course_completed.personal_number AND courses.code = course_completed.course_code;
-
+		FROM students 
+		NATURAL JOIN course_completed
+		INNER JOIN courses ON courses.code = course_completed.course_code;
+	
+	
 	CREATE VIEW Registrations AS
 			(SELECT students.personal_number,courses.code,'waiting' AS status
 			FROM students,courses,waiting_for
@@ -372,11 +376,9 @@ CREATE TABLE host_programs (
 
 
 	CREATE VIEW PassedCourses AS
-		SELECT students.personal_number,students.name,courses.code,courses.name AS course_name,courses.credit,course_completed.grade
-		FROM students,courses,course_completed
-		WHERE students.personal_number = course_completed.personal_number AND
-			courses.code = course_completed.course_code
-			AND course_completed.grade <> 'U';
+		SELECT *
+		FROM FinishedCourses
+		WHERE grade <> 'U';
 
 		
 	CREATE VIEW UnreadMandatory AS
@@ -401,12 +403,10 @@ CREATE TABLE host_programs (
 			)
 		) AS resultTable WHERE NOT EXISTS (
 					--Get courses which student has passed
-					SELECT course_completed.personal_number
-					FROM course_completed
-					WHERE (course_completed.personal_number = resultTable.personal_number 
-						AND resultTable.mandatory = course_completed.course_code
-						AND grade <> 'U'
-					)
+					SELECT *
+					FROM PassedCourses AS PS
+					WHERE (resultTable.personal_number = PS.personal_number 
+						AND resultTable.mandatory = PS.code)
 		);
 
 	CREATE VIEW PathToGraduation AS
@@ -443,16 +443,21 @@ CREATE TABLE host_programs (
 			(SELECT personal_number, SUM(PC.credit) AS total_credits_rec
 			FROM is_recommended AS isr
 			INNER JOIN PassedCourses AS PC ON isr.course_code = PC.code
+			GROUP BY (personal_number)),
+		belongs_to_branch AS
+			(SELECT personal_number, COUNT(branch_name) AS bn
+			FROM StudentsFollowing
 			GROUP BY (personal_number))
 	SELECT s.personal_number,s.name,s.program_name,credits_in_seminar_courses.nbr_seminar_courses,
-	credits_in_research.credits_in_research,credits_in_math.credits_in_math,
-	unread_mandatory.mandatory_left,completed_courses.total_credits,
+	unread_mandatory.mandatory_left, completed_courses.total_credits,
+	credits_in_research.credits_in_research, belongs_to_branch.bn, credits_in_math.credits_in_math,
 	CASE 
 		WHEN( 
 			credits_in_math >= 20 AND
 			credits_in_research >= 10 AND
 			nbr_seminar_courses >= 1 AND 
 			total_credits_rec >= 10 AND
+			bn >= 1 AND
 			mandatory_left IS NULL
 		) 
 		THEN 'Yes'
@@ -464,7 +469,8 @@ CREATE TABLE host_programs (
 	LEFT JOIN credits_in_research ON s.personal_number =  credits_in_research.personal_number
 	LEFT JOIN credits_in_seminar_courses ON s.personal_number =  credits_in_seminar_courses.personal_number
 	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number
-	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number;
+	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number
+	LEFT JOIN belongs_to_branch ON s.personal_number = belongs_to_branch.personal_number;
 	
 	CREATE VIEW CourseQueuePositions AS
 		SELECT personal_number, code, since_date,ROW_NUMBER() OVER (PARTITION BY code ORDER BY since_date) AS position
