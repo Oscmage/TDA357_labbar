@@ -13,9 +13,11 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 	
 	CREATE VIEW FinishedCourses AS
 		SELECT students.personal_number,courses.code,courses.name,courses.credit,course_completed.grade
-		FROM students,courses,course_completed
-		WHERE students.personal_number = course_completed.personal_number AND courses.code = course_completed.course_code;
-
+		FROM students 
+		INNER JOIN course_completed ON course_completed.personal_number = students.personal_number
+		INNER JOIN courses ON courses.code = course_completed.course_code;
+	
+	
 	CREATE VIEW Registrations AS
 			(SELECT students.personal_number,courses.code,'waiting' AS status
 			FROM students,courses,waiting_for
@@ -59,7 +61,6 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 					FROM PassedCourses AS PS
 					WHERE (resultTable.personal_number = PS.personal_number 
 						AND resultTable.mandatory = PS.code)
-					)
 		);
 
 	CREATE VIEW PathToGraduation AS
@@ -124,3 +125,5 @@ UnreadMandatory,PathToGraduation, CourseQueuePosition,registered_students_for_li
 	LEFT JOIN completed_courses ON s.personal_number = completed_courses.personal_number
 	LEFT JOIN credits_in_recommended AS CIR ON s.personal_number = CIR.personal_number
 	LEFT JOIN belongs_to_branch ON s.personal_number = belongs_to_branch.personal_number;
+
+	SELECT * FROM FinishedCourses;
