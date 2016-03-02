@@ -335,6 +335,8 @@ CREATE TABLE host_programs (
 	INSERT INTO is_registered_for VALUES ('9111131230', 'DAT216');
 	INSERT INTO is_registered_for VALUES ('9411131230', 'KLP368');
 	INSERT INTO is_registered_for VALUES ('9206031111', 'KLP368');
+	INSERT INTO is_registered_for VALUES ('4206120001', 'DAT205');
+
 	
 	/*Additional Mandatory*/
 	INSERT INTO additional_mandatory VALUES ('DRU101','Software Engineering','Informationsteknik');
