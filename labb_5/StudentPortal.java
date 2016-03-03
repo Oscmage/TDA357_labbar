@@ -99,6 +99,21 @@ public class StudentPortal
 
         //Get fullfills for grad
         printFulfillsForGrad(statement, student);
+
+        //Get CourseQueuePositions
+        printCourseQueuePositions(statement, student);
+    }
+
+    private static void printCourseQueuePositions(Statement statement, String student) throws SQLException {
+        System.out.println("<-----------START POSITION IN QUEUE FOR COURSES----------->");
+
+        String query = "SELECT code, position FROM CourseQueuePositions WHERE personal_number='" + student +  "'";
+
+        ResultSet result = statement.executeQuery(query);
+        while (result.next()) {
+            System.out.println( "code: " + result.getString("code") + ", position: "  + result.getString("position"));
+        }
+        System.out.println("<-----------END POSITION IN QUEUE FOR COURSES----------->");
     }
 
     private static void printStudentInfo(Statement statement, String student) throws SQLException {
@@ -145,12 +160,12 @@ public class StudentPortal
     }
 
     private static void printRegisteredTo(Statement statement, String student) {
-        System.out.println("<--------START Registered courses---------->");
-        String query = "SELECT course_code FROM is_registered_for WHERE personal_number='" + student + "'";
+        System.out.println("<--------START Registered and waiting courses---------->");
+        String query = "SELECT code,status FROM registrations WHERE personal_number='" + student + "'";
         try {
             ResultSet result = statement.executeQuery(query);
             while (result.next()) {
-                System.out.println("Code: " + result.getString("course_code"));
+                System.out.println("Code: " + result.getString("code") + ", " + result.getString("status"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
