@@ -93,10 +93,10 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $$
 				IF totWaitingStudents > 0 THEN
 					-- we now know there's someone to register.
 
-					-- Get the student which was first in queue.
+					-- Get the student which is first in queue.
 					firstPersNum := (SELECT personal_number FROM Registrations AS REG WHERE OLD.code = REG.code AND position = '1');
 
-					-- Delete the student which was first in queue from the waiting list
+					-- Delete the student which is first in queue from the waiting list
 					DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = firstPersNum;
 
 					-- Insert the student which was first in the waiting list to registered.
