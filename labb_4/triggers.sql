@@ -75,6 +75,7 @@ CREATE OR REPLACE VIEW StudentsFirstInQueue AS
 
 CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $$
 	DECLARE
+		isLimitedCourse int;
 		maximumAmount int;
 		currentReg int;
 		totWaitingStudents int;
@@ -85,28 +86,31 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $$
 		DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = OLD.personal_number;
 		DELETE FROM is_registered_for WHERE personal_number = OLD.personal_number AND course_code = OLD.code;
 
-		-- Get maximum amount for the course
-		maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE OLD.code = lc.code);
-		
-		-- Get current registered for the course
-		SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE OLD.code = reg.code AND reg.status = 'registered'; 
+		isLimitedCourse := (SELECT Count(*) FROM limited_courses WHERE OLD.code = limited_courses.code);
+		IF isLimitedCourse > 0 THEN
+			-- Get maximum amount for the course
+			maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE OLD.code = lc.code);
+			
+			-- Get current registered for the course
+			SELECT Count(*) INTO currentReg FROM Registrations AS reg WHERE OLD.code = reg.code AND reg.status = 'registered'; 
+			-- Make sure we're not adding a student if there isn't place for one.
+			IF currentReg < maximumAmount THEN
 
-		IF currentReg < maximumAmount THEN
+				-- Count the amount of waiting students.
+				SELECT Count (*) INTO totWaitingStudents FROM Registrations WHERE code = OLD.code AND status = 'waiting';
+				-- Make sure we have someone waiting in queue.
+				IF totWaitingStudents > 0 THEN
+					-- we now know there's someone to register.
 
-			-- Count the amount of waiting students.
-			SELECT Count (*) INTO totWaitingStudents FROM Registrations WHERE code = OLD.code AND status = 'waiting';
-			-- Make sure we have someone waiting in queue.
-			IF totWaitingStudents > 0 THEN
-				-- we now know there's someone to register.
+					-- Get the student which was first in queue.
+					firstPersNum := (SELECT personal_number FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
 
-				-- Get the student which was first in queue.
-				firstPersNum := (SELECT personal_number FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
+					-- Delete the student which was first in queue from the waiting list
+					DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = firstPersNum;
 
-				-- Delete the student which was first in queue from the waiting list
-				DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = firstPersNum;
-
-				-- Insert the student which was first in the waiting list to registered.
-				INSERT INTO is_registered_for VALUES (firstPersNum, OLD.code);
+					-- Insert the student which was first in the waiting list to registered.
+					INSERT INTO is_registered_for VALUES (firstPersNum, OLD.code);
+				END IF;
 			END IF;
 		END IF;
 		RETURN OLD;
