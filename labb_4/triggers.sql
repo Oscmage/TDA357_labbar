@@ -93,17 +93,19 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $$
 
 		IF currentReg < maximumAmount THEN
 
-				-- Count the amount of waiting students.
-			SELECT Count (*) INTO totWaitingStudents FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code;
-
+			-- Count the amount of waiting students.
+			SELECT Count (*) INTO totWaitingStudents FROM Registrations WHERE code = OLD.code AND status = 'waiting';
+			-- Make sure we have someone waiting in queue.
 			IF totWaitingStudents > 0 THEN
+				-- we now know there's someone to register.
 
+				-- Get the student which was first in queue.
 				firstPersNum := (SELECT personal_number FROM StudentsFirstInQueue AS SFIQ WHERE OLD.code = SFIQ.code);
 
-				-- Delete the first student from waiting list
+				-- Delete the student which was first in queue from the waiting list
 				DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = firstPersNum;
 
-				-- Insert the old first in queue student into registrations
+				-- Insert the student which was first in the waiting list to registered.
 				INSERT INTO is_registered_for VALUES (firstPersNum, OLD.code);
 			END IF;
 		END IF;

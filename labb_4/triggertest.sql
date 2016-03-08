@@ -33,34 +33,30 @@ DELETE FROM waiting_for WHERE code = 'ANP395' OR code = 'KLP368';
 */
 
 --testing already completed course, should give exception
---INSERT INTO registrations VALUES ('9411131230','DRU101','waiting');
+INSERT INTO registrations VALUES ('9411131230','DRU101','waiting');
 
 --testing prerequisites, should give exception
---INSERT INTO registrations VALUES ('9411131230','TDA545','waiting');
+INSERT INTO registrations VALUES ('9411131230','TDA545','waiting');
 
 --testing already registered, should give exception
---INSERT INTO registrations VALUES ('9411131230','EDA433','waiting');
+INSERT INTO registrations VALUES ('9411131230','EDA433','waiting');
 
 --Test adding student to a none limited_course, should be no problem.
-/*
 INSERT INTO registrations VALUES ('9411131230','ANP395','waiting');
-SELECT * FROM registrations WHERE personal_number = '9411131230' AND code = 'ANP395';
-*/
+--SELECT * FROM registrations WHERE personal_number = '9411131230' AND code = 'ANP395';
 
 --Test adding same student twice, should give error that student already exists. 
-/*
 INSERT INTO registrations VALUES ('9411131230','ANP395','waiting');
 INSERT INTO registrations VALUES ('9411131230','ANP395','waiting');
-*/
 
 --Testing is waiting for  (or if full) (KLP368 max amount = 1) */
-/*
+
 INSERT INTO registrations VALUES ('9411131230','KLP368','waiting');
-INSERT INTO registrations VALUES ('9206031111','KLP368','waiting'); 
-*/	
+INSERT INTO registrations VALUES ('9206031111','KLP368','waiting'); 	
+
 --SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --Victor should appear here
 --SELECT * FROM is_registered_for AS irf WHERE irf.course_code = 'KLP368' AND irf.personal_number = '9411131230'; --Oscar should appear here
---INSERT INTO registrations VALUES ('9311131230','KLP368','waiting');
+INSERT INTO registrations VALUES ('9311131230','KLP368','waiting');
 
 
 /*
@@ -74,15 +70,15 @@ INSERT INTO registrations VALUES ('9206031111','KLP368','waiting');
 
 
 --Testing if the deletes works.	
-/*
+
 INSERT INTO registrations VALUES ('9411131230','KLP368','waiting');
 DELETE FROM registrations WHERE personal_number = '9411131230' AND code = 'KLP368';
-SELECT * FROM registrations AS iwf WHERE iwf.code = 'KLP368'; --9411131230 should not be found within the table.
-*/
+--SELECT * FROM registrations AS iwf WHERE iwf.code = 'KLP368'; --9411131230 should not be found within the table.
+
 
 
 -- Inserting some students to wait for a course with a maxAmount 1. 
-/*
+
 INSERT INTO courses VALUES ('RTV242', 'FX Hedging', 9.5, 'MA');
 INSERT INTO limited_course VALUES ('RTV242','1');
 
@@ -95,6 +91,6 @@ DELETE FROM registrations WHERE personal_number = '9411131230' AND code = 'RTV24
 
 --Now 9206031111 should be the registered student
 SELECT * FROM registrations WHERE code = 'RTV242';
-*/
+
 
 
