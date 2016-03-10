@@ -49,7 +49,7 @@ INSERT INTO registrations VALUES ('9411131230','ANP395','waiting');
 INSERT INTO registrations VALUES ('9411131230','ANP395','waiting');
 INSERT INTO registrations VALUES ('9411131230','ANP395','waiting');
 
---Testing is waiting for  (or if full) (KLP368 max amount = 1) */
+--Testing is waiting for  (or if full) (KLP368 max amount = 1) 
 
 INSERT INTO registrations VALUES ('9411131230','KLP368','waiting');
 INSERT INTO registrations VALUES ('9206031111','KLP368','waiting'); 	
@@ -57,7 +57,6 @@ INSERT INTO registrations VALUES ('9206031111','KLP368','waiting');
 --SELECT * FROM waiting_for AS iwf WHERE iwf.code = 'KLP368' AND iwf.personal_number = '9206031111'; --Victor should appear here
 --SELECT * FROM is_registered_for AS irf WHERE irf.course_code = 'KLP368' AND irf.personal_number = '9411131230'; --Oscar should appear here
 INSERT INTO registrations VALUES ('9311131230','KLP368','waiting');
-
 
 /*
 

@@ -57,7 +57,7 @@ CREATE OR REPLACE FUNCTION register() RETURNS trigger AS $$
 			INSERT INTO is_registered_for VALUES (NEW.personal_number, NEW.code);
 		END IF;
 		RETURN NEW;
-         END;
+ 	END;
 $$ LANGUAGE plpgsql;
 
 
@@ -77,7 +77,7 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $$
 		DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = OLD.personal_number;
 		DELETE FROM is_registered_for WHERE personal_number = OLD.personal_number AND course_code = OLD.code;
 
-		isLimitedCourse := (SELECT Count(*) FROM limited_courses WHERE OLD.code = limited_courses.code);
+		isLimitedCourse := (SELECT Count(*) FROM limited_course AS lc WHERE OLD.code = lc.code);
 		IF isLimitedCourse > 0 THEN
 			-- Get maximum amount for the course
 			maximumAmount := (SELECT max_amount FROM limited_course AS lc WHERE OLD.code = lc.code);
@@ -94,7 +94,7 @@ CREATE OR REPLACE FUNCTION unregister() RETURNS trigger AS $$
 					-- we now know there's someone to register.
 
 					-- Get the student which is first in queue.
-					firstPersNum := (SELECT personal_number FROM Registrations AS REG WHERE OLD.code = REG.code AND position = '1');
+					firstPersNum := (SELECT personal_number FROM CourseQueuePositions AS CQP WHERE OLD.code = CQP.code AND position = '1');
 
 					-- Delete the student which is first in queue from the waiting list
 					DELETE FROM waiting_for WHERE code = OLD.code AND personal_number = firstPersNum;
